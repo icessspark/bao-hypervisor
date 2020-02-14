@@ -19,10 +19,13 @@
 #include <bao.h>
 #include <arch/platform.h>
 #include <plat/platform.h>
+#include <mem.h>
+#include <ipc.h>
 
 struct mem_region {
     uint64_t base;
     size_t size;
+    shmem_t *shared;
 
     int place_phys;
     uint64_t phys;
@@ -45,6 +48,9 @@ struct platform_desc {
 
     uint64_t dev_num;
     struct dev_region *devs;
+
+    uint64_t ipc_num;
+    ipc_obj_config_t *ipc_obj_list;
 
     struct {
         uint64_t base;

@@ -22,8 +22,20 @@
 #include <spinlock.h>
 #include <fences.h>
 #include <string.h>
+#include <ipc.h>
 
 struct config* vm_config_ptr;
+
+list_t ipc_obj_list;
+objcache_t ipc_oc;
+spinlock_t ipc_list_lock;
+
+list_t vm_list;
+objcache_t vm_node_oc;
+objcache_t vm_pub_oc;
+uint64_t vm_pub_counter = 0;
+spinlock_t vm_pub_lock;
+
 
 void vmm_init()
 {
@@ -120,6 +132,13 @@ void vmm_init()
             fence_ord_write();
             vm_assign[vm_id].vm_shared_table =
                 *pt_get_pte(&cpu.as.pt, 0, (void*)BAO_VM_BASE);
+
+            list_init(&ipc_obj_list);
+            objcache_init(&ipc_oc, sizeof(struct ipc_info), SEC_HYP_GLOBAL, false);
+
+            list_init(&vm_list);
+            objcache_init(&vm_node_oc, sizeof(struct vm_public_node), SEC_HYP_GLOBAL, false);
+            objcache_init(&vm_pub_oc, sizeof(vm_public_t), SEC_HYP_GLOBAL, false);
         } else {
             while (vm_assign[vm_id].vm_shared_table == 0);
             pte_t* pte = pt_get_pte(&cpu.as.pt, 0, (void*)BAO_VM_BASE);
@@ -141,4 +160,39 @@ void vmm_init()
     } else {
         cpu_idle();
     }
+}
+
+ipc_info_t* find_ipc_obj_in_list(ipc_obj_t *ipc_obj) {
+
+    spin_lock(&ipc_list_lock);
+
+    list_foreach(ipc_obj_list, struct ipc_info, it){
+        if(it->ipc_obj.shmem == ipc_obj->shmem){
+            spin_unlock(&ipc_list_lock);
+            return it;
+        }
+    }
+
+    spin_unlock(&ipc_list_lock);
+    return NULL;
+}
+
+ipc_info_t* create_ipc_node()
+{
+    ipc_info_t *ipc_info;
+
+    /* if it does not exist allocate it, and add it to list */
+    ipc_info = objcache_alloc(&ipc_oc);
+    spin_lock(&ipc_list_lock);
+    list_push(&ipc_obj_list, (node_t)ipc_info);
+    /* initialize containg ipc participants */
+    list_init(&ipc_info->vms);
+    spin_unlock(&ipc_list_lock);
+
+    return ipc_info;
+}
+
+void add_vm_public(struct vm_public_node *vm_public)
+{
+    list_push(&vm_list, (node_t)vm_public);
 }

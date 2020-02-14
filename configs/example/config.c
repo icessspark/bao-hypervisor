@@ -23,9 +23,16 @@
 VM_IMAGE(vm1, /path/to/vm1/binary.bin);
 VM_IMAGE(vm2, /path/to/vm2/binary.bin);
 
+shmem_t shmem = {
+    .base = 0x90000000,
+    .size = 0x90000000,
+};
+
 /**
  * Config each VM.
  */
+
+
 struct config config = {
     
     /**
@@ -75,13 +82,27 @@ struct config config = {
                         .size = 0x10000,
                         .interrupt_num = 1,
                         .interrupts = (uint64_t[]) {38} 
-                    }
+                    },
+                },
+
+                .ipc_num = 1,
+                .ipc_obj_list= (ipc_obj_config_t[]) {
+                    {
+                        .ipc_obj = {
+                            .id = 1,
+                            .shmem = &shmem,
+                        },
+                        .ipc_if = {
+                            .irq_num = 400,
+                        },
+                    },
                 },
 
                 .arch = {
                     .gic = {
                         .gicc_addr = 0x2C000000,
-                        .gicd_addr = 0x2F000000
+                        .gicd_addr = 0x2F000000,
+                        .extra_irq = 32, /* extra irq for shmem */
                     }
                 }
             },
@@ -129,13 +150,27 @@ struct config config = {
                         /* Timer interrupt */
                         .interrupt_num = 1,
                         .interrupts = (uint64_t[]) {27}
-                    }
+                    },
+                },
+
+                .ipc_num = 1,
+                .ipc_obj_list= (ipc_obj_config_t[]) {
+                    {
+                        .ipc_obj = {
+                            .id = 1,
+                            .shmem = &shmem,
+                        },
+                        .ipc_if = {
+                            .irq_num = 400,
+                        },
+                    },
                 },
 
                 .arch = {
                     .gic = {
                         .gicc_addr = 0x2C000000,
-                        .gicd_addr = 0x2F000000
+                        .gicd_addr = 0x2F000000,
+                        .extra_irq = 32, /* extra irq for shmem */
                     }
                 }
             },

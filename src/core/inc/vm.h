@@ -30,6 +30,14 @@
 #include <interrupts.h>
 #include <bitmap.h>
 #include <iommu.h>
+#include <ipc.h>
+
+typedef struct vm_public {
+    uint64_t id;
+    ipc_if_t ipc_if;
+    size_t cpu_num;
+    uint32_t cpus;
+}vm_public_t;
 
 typedef struct vm {
     uint64_t id;

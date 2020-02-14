@@ -18,6 +18,7 @@
 #include <string.h>
 #include <mem.h>
 #include <cache.h>
+#include <vmm.h>
 
 struct emul_node {
     node_t node;
@@ -78,6 +79,16 @@ void vm_vcpu_init(vm_t* vm, const vm_config_t* config)
     list_push(&vm->vcpu_list, &vcpu->node);
 }
 
+void vm_init_pub_node(struct vm_public_node **vm_node, vm_t* vm) {
+    *vm_node = objcache_alloc(&vm_node_oc);
+    struct vm_public_node *node = *vm_node;
+    vm_public_t *vm_public = objcache_alloc(&vm_pub_oc);
+    node->vm_public = vm_public;
+    node->vm_public->id = vm->id;
+    node->vm_public->cpu_num = vm->cpu_num;
+    node->vm_public->cpus = vm->cpus;
+}
+
 static void vm_copy_img_to_rgn(vm_t* vm, const vm_config_t* config,
                                struct mem_region* reg)
 {
@@ -115,7 +126,8 @@ void vm_map_mem_region(vm_t* vm, struct mem_region* reg)
         ppages_t pa_reg = mem_ppages_get(reg->phys, n);
         mem_map(&vm->as, va, &pa_reg, n, PTE_VM_FLAGS);
     } else {
-        mem_map(&vm->as, va, NULL, n, PTE_VM_FLAGS);
+        /* reg->shared will be NULL if it is not shared memory */
+        mem_map(&vm->as, va, reg->shared, n, PTE_VM_FLAGS);
     }
 }
 
@@ -210,8 +222,43 @@ static void vm_init_dev(vm_t* vm, const vm_config_t* config)
       
 }
 
-void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
-{
+void vm_init_ipc(vm_t *vm, const vm_config_t* config,
+                                            struct vm_public_node *vm_node) {
+
+    const struct platform_desc *plat = &config->platform;
+    if(plat->ipc_num <= 0)
+        return;
+
+    /* check every ipc_obj in config */
+    for(int ipc = 0; ipc < plat->ipc_num; ipc++){
+        ipc_obj_config_t *ipc_obj_cfg = &plat->ipc_obj_list[ipc];
+
+        /* get ipc node ptr, from the list */
+        ipc_info_t *ipc_info = find_ipc_obj_in_list(&ipc_obj_cfg->ipc_obj);
+        if(ipc_info == NULL){
+            /* we did not have this entry yet, create one */
+            ipc_info = create_ipc_node();
+            ipc_info->ipc_obj = ipc_obj_cfg->ipc_obj;
+        } else {
+            if(ipc_info->ipc_obj.id != ipc_obj_cfg->ipc_obj.id)
+                ERROR();
+
+            if(ipc_info->ipc_obj.shmem != ipc_obj_cfg->ipc_obj.shmem)
+                ERROR();
+        }
+
+        vm_node->vm_public->ipc_if = ipc_obj_cfg->ipc_if;
+
+        /* add current vm to ipc participants */
+        /* TODO: prevent same VMs from being added twice to same obj */
+        struct vm_public_node *ipc_part_node = objcache_alloc(&vm_node_oc);
+        ipc_part_node->vm_public = vm_node->vm_public;
+        list_push(&ipc_info->vms, (node_t)ipc_part_node);
+    }
+}
+
+void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id){
+
     /**
      * Before anything else, initialize vm structure.
      */
@@ -243,8 +290,17 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
      * its image was loaded.
      */
     if (master) {
+
+        /* as the master of this VM, initialize public data */
+        struct vm_public_node *vm_node;
+        vm_init_pub_node(&vm_node, vm);
+
         vm_init_mem_regions(vm, config);
         vm_init_dev(vm, config);
+        vm_init_ipc(vm, config, vm_node);
+
+        /* all done, add to public information to global data */
+        add_vm_public(vm_node);
     }
 
     cpu_sync_barrier(&vm->sync);

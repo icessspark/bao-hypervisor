@@ -52,6 +52,8 @@ typedef struct {
     uint64_t colors;
 } ppages_t;
 
+typedef ppages_t shmem_t;
+
 static inline ppages_t mem_ppages_get(uint64_t base, uint64_t size)
 {
     return (ppages_t){.colors = 0, .base = base, .size = size};
