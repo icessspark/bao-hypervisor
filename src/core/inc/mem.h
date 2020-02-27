@@ -52,7 +52,11 @@ typedef struct {
     uint64_t colors;
 } ppages_t;
 
-typedef ppages_t shmem_t;
+typedef struct{
+    ppages_t ppages;
+    bool reserved;
+    bool allocated;
+} shmem_t;
 
 static inline ppages_t mem_ppages_get(uint64_t base, uint64_t size)
 {

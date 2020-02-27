@@ -1046,8 +1046,8 @@ bool mem_map_vm_config(uint64_t config_addr)
     ppages_t pages = mem_ppages_get(config_addr, 1);
     mem_map(&cpu.as, vm_config_ptr, &pages, 1, PTE_HYP_FLAGS);
     if (vm_config_ptr->config_header_size > PAGE_SIZE) {
-        size_t n =
-            NUM_PAGES(((uint64_t)vm_config_ptr->config_header_size) - PAGE_SIZE);
+        size_t n = NUM_PAGES(((uint64_t)vm_config_ptr->config_header_size) -
+                             PAGE_SIZE);
         void *va = mem_alloc_vpage(&cpu.as, SEC_HYP_GLOBAL,
                                    vm_config_ptr + PAGE_SIZE, n);
         if (va == NULL) return false;

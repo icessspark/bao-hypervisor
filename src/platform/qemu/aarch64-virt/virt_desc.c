@@ -22,7 +22,7 @@ struct platform_desc platform = {
     .regions =  (struct mem_region[]) {
         {
             .base = 0x40000000,
-            .size = 0x40000000 
+            .size = 0x60000000, /* 1.5GB */
         }
     },
 

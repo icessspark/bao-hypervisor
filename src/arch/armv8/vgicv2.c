@@ -560,12 +560,12 @@ void vgicd_emul_pendr_access(emul_access_t *acc, bool set)
     }
 }
 
-inline void vgicd_emul_ispendr_access(emul_access_t *acc)
+void vgicd_emul_ispendr_access(emul_access_t *acc)
 {
     vgicd_emul_pendr_access(acc, true);
 }
 
-inline void vgicd_emul_icpendr_access(emul_access_t *acc)
+void vgicd_emul_icpendr_access(emul_access_t *acc)
 {
     vgicd_emul_pendr_access(acc, false);
 }

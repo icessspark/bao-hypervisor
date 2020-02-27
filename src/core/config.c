@@ -20,14 +20,29 @@ void config_adjust_to_va(struct config *config, uint64_t phys)
     for (int i = 0; i < config->vmlist_size; i++) {
         config->vmlist[i].image.load_addr =
             config->vmlist[i].image.load_addr + phys;
+
         config->vmlist[i].platform.regions =
             (void *)config->vmlist[i].platform.regions + (uint64_t)config;
+        for (int j = 0; j < config->vmlist[i].platform.region_num; j++) {
+            if(config->vmlist[i].platform.regions[j].shared)
+                config->vmlist[i].platform.regions[j].shared =
+                (void *)config->vmlist[i].platform.regions[j].shared +
+                (uint64_t)config;
+        }
+
         config->vmlist[i].platform.devs =
             (void *)config->vmlist[i].platform.devs + (uint64_t)config;
-
         for (int j = 0; j < config->vmlist[i].platform.dev_num; j++) {
             config->vmlist[i].platform.devs[j].interrupts =
                 (void *)config->vmlist[i].platform.devs[j].interrupts +
+                (uint64_t)config;
+        }
+
+        config->vmlist[i].platform.ipc_obj_list =
+            (void *)config->vmlist[i].platform.ipc_obj_list + (uint64_t)config;
+        for (int j = 0; j < config->vmlist[i].platform.ipc_num; j++) {
+            config->vmlist[i].platform.ipc_obj_list[j].ipc_obj.shmem =
+                (void *)config->vmlist[i].platform.ipc_obj_list[j].ipc_obj.shmem +
                 (uint64_t)config;
         }
 

@@ -125,9 +125,20 @@ void vm_map_mem_region(vm_t* vm, struct mem_region* reg)
     if (reg->place_phys) {
         ppages_t pa_reg = mem_ppages_get(reg->phys, n);
         mem_map(&vm->as, va, &pa_reg, n, PTE_VM_FLAGS);
+    } else if (!reg->shared) {
+        mem_map(&vm->as, va, NULL, n, PTE_VM_FLAGS);
     } else {
-        /* reg->shared will be NULL if it is not shared memory */
-        mem_map(&vm->as, va, reg->shared, n, PTE_VM_FLAGS);
+        /* assumes shared memory is the same size as region */
+        if (reg->shared->reserved || reg->shared->allocated) {
+            ppages_t pa_reg = reg->shared->ppages;
+            mem_map(&vm->as, va, &pa_reg, n, PTE_VM_FLAGS);
+        } else if (!reg->shared->allocated) {
+            reg->shared->ppages = mem_alloc_ppages(&cpu.as, n, true);
+            mem_map(&vm->as, va, &reg->shared->ppages, n, PTE_VM_FLAGS);
+
+            reg->shared->reserved = true;
+            reg->shared->allocated = true;
+        }
     }
 }
 
