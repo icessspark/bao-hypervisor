@@ -181,21 +181,20 @@ ipc_info_t* find_ipc_obj_in_list(ipc_obj_t *ipc_obj) {
         }
     }
 
-    spin_unlock(&ipc_list_lock);
     return NULL;
 }
 
-ipc_info_t* create_ipc_node()
+ipc_info_t* create_ipc_node(ipc_obj_t *ipc_obj)
 {
     ipc_info_t *ipc_info;
 
-    /* if it does not exist allocate it, and add it to list */
     ipc_info = objcache_alloc(&ipc_oc);
-    spin_lock(&ipc_list_lock);
     list_push(&ipc_obj_list, (node_t)ipc_info);
-    /* initialize containg ipc participants */
+
+    /* initialize ipc participants list */
     list_init(&ipc_info->vms);
-    spin_unlock(&ipc_list_lock);
+
+    ipc_info->ipc_obj = *ipc_obj;
 
     return ipc_info;
 }

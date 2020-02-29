@@ -250,8 +250,7 @@ void vm_init_ipc(vm_t *vm, const vm_config_t* config,
         ipc_info_t *ipc_info = find_ipc_obj_in_list(&ipc_obj_cfg->ipc_obj);
         if(ipc_info == NULL){
             /* we did not have this entry yet, create one */
-            ipc_info = create_ipc_node();
-            ipc_info->ipc_obj = ipc_obj_cfg->ipc_obj;
+            ipc_info = create_ipc_node(&ipc_obj_cfg->ipc_obj);
         } else {
             if(ipc_info->ipc_obj.id != ipc_obj_cfg->ipc_obj.id)
                 ERROR();
