@@ -244,6 +244,8 @@ void vm_init_ipc(vm_t *vm, const vm_config_t* config,
     for(int ipc = 0; ipc < plat->ipc_num; ipc++){
         ipc_obj_config_t *ipc_obj_cfg = &plat->ipc_obj_list[ipc];
 
+        ipc_list_lock();
+
         /* get ipc node ptr, from the list */
         ipc_info_t *ipc_info = find_ipc_obj_in_list(&ipc_obj_cfg->ipc_obj);
         if(ipc_info == NULL){
@@ -265,6 +267,8 @@ void vm_init_ipc(vm_t *vm, const vm_config_t* config,
         struct vm_public_node *ipc_part_node = objcache_alloc(&vm_node_oc);
         ipc_part_node->vm_public = vm_node->vm_public;
         list_push(&ipc_info->vms, (node_t)ipc_part_node);
+
+        ipc_list_unlock();
     }
 }
 

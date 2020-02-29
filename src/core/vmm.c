@@ -28,7 +28,7 @@ struct config* vm_config_ptr;
 
 list_t ipc_obj_list;
 objcache_t ipc_oc;
-spinlock_t ipc_list_lock;
+spinlock_t ipc_list_spinlock;
 
 list_t vm_list;
 objcache_t vm_node_oc;
@@ -162,9 +162,17 @@ void vmm_init()
     }
 }
 
-ipc_info_t* find_ipc_obj_in_list(ipc_obj_t *ipc_obj) {
+void ipc_list_lock()
+{
+    spin_lock(&ipc_list_spinlock);
+}
 
-    spin_lock(&ipc_list_lock);
+void ipc_list_unlock()
+{
+    spin_unlock(&ipc_list_spinlock);
+}
+
+ipc_info_t* find_ipc_obj_in_list(ipc_obj_t *ipc_obj) {
 
     list_foreach(ipc_obj_list, struct ipc_info, it){
         if(it->ipc_obj.shmem == ipc_obj->shmem){
