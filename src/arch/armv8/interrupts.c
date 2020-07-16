@@ -5,6 +5,7 @@
  *
  * Authors:
  *      Jose Martins <jose.martins@bao-project.org>
+ *      Angelo Ruocco <angeloruocco90@gmail.com>
  *
  * Bao is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License version 2 as published by the Free
@@ -30,9 +31,6 @@ void interrupts_arch_init()
                     NUM_PAGES(sizeof(gicc)));
         mem_map_dev(&cpu.as, (void *)&gich, platform.arch.gic.gich_addr,
                     NUM_PAGES(sizeof(gich)));
-        mem_map_dev(&cpu.as, (void *)gich_alias,
-                    platform.arch.gic.gich_alias_addr,
-                    NUM_PAGES(sizeof(gich) * 8));
         mem_map_dev(&cpu.as, (void *)&gicd, platform.arch.gic.gicd_addr,
                     NUM_PAGES(sizeof(gicd)));
     }
@@ -72,9 +70,14 @@ bool interrupts_arch_check(uint64_t int_id)
     return gicd_get_state(int_id) & PEND;
 }
 
+inline bool interrupts_arch_conflict(bitmap_t interrupt_bitmap, uint64_t int_id)
+{
+    return (bitmap_get(interrupt_bitmap, int_id) && int_id > GIC_CPU_PRIV);
+}
+
 void interrupts_arch_clear(uint64_t int_id)
 {
-    gicd_set_pend(int_id, false);
+    gicd_set_state(int_id, INV);
 }
 
 void interrupts_arch_vm_assign(vm_t *vm, uint64_t id)

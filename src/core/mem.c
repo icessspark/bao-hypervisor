@@ -5,6 +5,7 @@
  *
  * Authors:
  *      Jose Martins <jose.martins@bao-project.org>
+ *      Angelo Ruocco <angeloruocco90@gmail.com>
  *
  * Bao is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License version 2 as published by the Free
@@ -761,8 +762,11 @@ int mem_map_reclr(addr_space_t *as, void *va, ppages_t *ppages, size_t n,
     /**
      * Free the uncolored pages of the original image.
      */
-    ppages_t unused_pages = *ppages;
-    unused_pages.colors = ~ppages->colors;
+    ppages_t unused_pages = {
+        .base = ppages->base,
+        .size = reclrd_num,
+        .colors = ~as->colors
+    };
     mem_free_ppages(&unused_pages);
 
     mem_free_vpage(&cpu.as, reclrd_va_base, reclrd_num, false);
@@ -965,10 +969,10 @@ bool mem_reserve_config(uint64_t config_addr, page_pool_t *pool)
 {
     if (config_found) return true;
 
-    bool cfg_in_pool = range_in_range(config_addr, vm_config_ptr->vmconfig_size,
+    bool cfg_in_pool = range_in_range(config_addr, vm_config_ptr->config_size,
                                       pool->base, pool->size * PAGE_SIZE);
     if (cfg_in_pool) {
-        size_t n_pg = NUM_PAGES(vm_config_ptr->vmconfig_size);
+        size_t n_pg = NUM_PAGES(vm_config_ptr->config_size);
         ppages_t pp = mem_ppages_get(config_addr, n_pg);
         if (!mem_reserve_ppool_ppages(pool, &pp)) return false;
         config_found = true;
@@ -1041,9 +1045,9 @@ bool mem_map_vm_config(uint64_t config_addr)
 
     ppages_t pages = mem_ppages_get(config_addr, 1);
     mem_map(&cpu.as, vm_config_ptr, &pages, 1, PTE_HYP_FLAGS);
-    if (vm_config_ptr->vmconfig_header_size > PAGE_SIZE) {
+    if (vm_config_ptr->config_header_size > PAGE_SIZE) {
         size_t n =
-            NUM_PAGES(((uint64_t)vm_config_ptr->vmconfig_header_size) - PAGE_SIZE);
+            NUM_PAGES(((uint64_t)vm_config_ptr->config_header_size) - PAGE_SIZE);
         void *va = mem_alloc_vpage(&cpu.as, SEC_HYP_GLOBAL,
                                    vm_config_ptr + PAGE_SIZE, n);
         if (va == NULL) return false;
@@ -1222,7 +1226,7 @@ void color_hypervisor(const uint64_t load_addr, const uint64_t config_addr)
      */
     if (cpu.id == CPU_MASTER) {
         /* Map configuration onto new space */
-        size_t config_size = NUM_PAGES(vm_config_ptr->vmconfig_header_size);
+        size_t config_size = NUM_PAGES(vm_config_ptr->config_header_size);
         ppages_t config_pages = mem_ppages_get(config_addr, config_size);
         mem_map(&cpu_new->as, vm_config_ptr, &config_pages, config_size,
                 PTE_HYP_FLAGS);

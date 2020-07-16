@@ -13,22 +13,14 @@
  #
 ##
 
-cpu-objs-y+=boot.o
-cpu-objs-y+=exceptions.o
-cpu-objs-y+=pagetables.o
-cpu-objs-y+=page_table.o
-cpu-objs-y+=cache.o
-cpu-objs-y+=interrupts.o
-cpu-objs-y+=gicv2.o
-cpu-objs-y+=vgicv2.o
-cpu-objs-y+=mem.o
-cpu-objs-y+=vmm.o
-cpu-objs-y+=vm.o
-cpu-objs-y+=aborts.o
-cpu-objs-y+=smc.o
-cpu-objs-y+=psci.o
-cpu-objs-y+=cpu.o
-cpu-objs-y+=platform.o
-cpu-objs-y+=relocate.o
-cpu-objs-y+=iommu.o
-cpu-objs-y+=smmuv2.o
+# Architecture definition
+ARCH:=armv8
+# CPU definition
+CPU:=cortex-a53
+
+drivers = pl011_uart
+
+platform-cppflags =
+platform-cflags = -mcpu=$(CPU)
+platform-asflags =
+platform-ldflags =

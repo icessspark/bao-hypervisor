@@ -24,10 +24,22 @@ struct arch_platform {
         uint64_t gich_addr;
         uint64_t gicv_addr;
         uint64_t gicd_addr;
-        uint64_t gich_alias_addr;
 
         uint64_t maintenance_id;
     } gic;
+
+    struct {
+        uint64_t base;
+        uint64_t interrupt_id;
+        uint16_t global_mask;
+
+        uint32_t group_num;
+        struct smmu_group {
+            uint16_t group_mask;
+            uint16_t group_id;
+        } *smmu_groups;
+
+    } smmu;
 
     struct {
         uint64_t base_addr;
