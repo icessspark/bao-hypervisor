@@ -16,7 +16,7 @@
 #ifndef __ARCH_BAO_H__
 #define __ARCH_BAO_H__
 
-#define BAO_VAS_BASE    (0xfd8000000000)
+#define BAO_VAS_BASE    (0xfd8040080000)
 #define BAO_CPU_BASE    (0xfe0000000000)
 #define BAO_VM_BASE     (0xfe8000000000)
 #define BAO_VAS_TOP     (0xff0000000000)
