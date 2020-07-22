@@ -181,6 +181,34 @@ static void vm_init_mem_regions(vm_t* vm, const vm_config_t* config)
     }
 }
 
+bool console_emul_handler(emul_access_t *acc) {
+    if (acc->addr == 0x09000018 && !acc->write) {
+        // uart->flag
+        vcpu_writereg(cpu.vcpu, acc->reg, 0);
+        return true;
+    }
+    if (acc->addr == 0x09000000 && acc->write) {
+        char c = vcpu_readreg(cpu.vcpu, acc->reg) & 0xff;
+        printk("%c", c);
+        return true;
+    }
+    printk("console_emul_handler addr %x width %d %c\n", acc->addr, acc->width, acc->write ? 'W' : 'R');
+    if (!acc->write) {
+        vcpu_writereg(cpu.vcpu, acc->reg, 0);
+    }
+    return true;
+}
+
+void vm_add_emul_console(vm_t* vm) {
+    emul_region_t emu = {
+        .va_base = 0x09000000,
+        .pa_base = 0x09000000,
+        .size = PAGE_SIZE,
+        .handler = console_emul_handler
+    };
+    vm_add_emul(vm, &emu);
+}
+
 static void vm_init_dev(vm_t* vm, const vm_config_t* config)
 {
     for (int i = 0; i < config->platform.dev_num; i++) {
@@ -207,7 +235,8 @@ static void vm_init_dev(vm_t* vm, const vm_config_t* config)
             }
         }
     }
-      
+
+    //vm_add_emul_console(vm);
 }
 
 void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
