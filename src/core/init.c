@@ -29,7 +29,13 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
     /**
      * These initializations must be executed first and in fixed order.
      */
-
+    /* NOTE: this is hardcoded for qemu virt machine.
+     * We cannot control the $x0 provided by qemu,
+     * so far this ugly workaround works.
+     * Specify the config_addr in qemu argument like
+     * `-device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000`
+     * */
+    config_addr = 0x49000000;
     cpu_init(cpu_id, load_addr);
     mem_init(load_addr, config_addr);
 
