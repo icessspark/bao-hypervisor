@@ -17,6 +17,5 @@ Make a minial ramdisk and copy into this folder as `initrd.gz`.
 
 Adjust `/chosen/linux,initrd-end` and make an all in one image:
 ```
-dtc virt.dts > virt.dtb
-CROSS_COMPILE=aarch64-elf- make IMAGE=Image DTB=virt.dtb TARGET=linux INITRD=initrd.gz
+make
 ```
