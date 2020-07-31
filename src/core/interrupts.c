@@ -66,9 +66,6 @@ inline void interrupts_init()
     }
 
     interrupts_cpu_enable(IPI_CPU_MSG, true);
-    /* Manually enable IRQ 42 here,
-     * don't know why it cannot be enabled through vGIC */
-    interrupts_cpu_enable(42, true);
 }
 
 static inline bool interrupt_is_reserved(int int_id)
