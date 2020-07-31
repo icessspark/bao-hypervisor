@@ -46,7 +46,7 @@ uint64_t platform_arch_cpuid_to_mpdir(const struct platform_desc* plat,
         mpidr = cpuid;
     }
 
-    mpidr |= MPIDR_RES1;
+    //mpidr |= MPIDR_RES1;
     if (plat->cpu_num == 1) {
         mpidr |= MPIDR_U_BIT;
     }
