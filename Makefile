@@ -16,7 +16,7 @@
 SHELL:=bash
 
 PROJECT_NAME:=bao
-
+CROSS_COMPILE:=aarch64-elf-
 # Setup toolchain macros
 cpp=		$(CROSS_COMPILE)cpp
 sstrip= 	$(CROSS_COMPILE)strip
@@ -31,8 +31,8 @@ size=		$(CROSS_COMPILE)size
 #Makefile arguments and default values
 DEBUG:=y
 OPTIMIZATIONS:=2
-CONFIG=
-PLATFORM=
+CONFIG=virtlinux
+PLATFORM=qemu/aarch64-virt
 
 # List existing submakes
 submakes:=config

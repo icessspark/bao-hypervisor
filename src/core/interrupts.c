@@ -80,6 +80,8 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
+    if (int_id != 27)
+        printk("interrupts_handle %d\n", int_id);
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {
         interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
 
