@@ -22,11 +22,8 @@
 VM_IMAGE(vm1,../lloader/linux.bin);
 
 struct config config =
-    {
-
-        CONFIG_HEADER
-
-            .vmlist_size = 1,
+    {    CONFIG_HEADER
+        .vmlist_size = 1,
         .vmlist =
             {
                 {
@@ -35,8 +32,8 @@ struct config config =
                               .size = VM_IMAGE_SIZE(vm1)},
 
                     .entry = 0x40000000,
-                    .cpu_affinity = 0b1,
-                    .platform = {.cpu_num = 1,
+                    .cpu_affinity = 0b1111,
+                    .platform = {.cpu_num = 4,
 
                                  .region_num = 1,
                                  .regions =
