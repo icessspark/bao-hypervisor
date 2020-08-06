@@ -113,12 +113,4 @@ add_executable(bao
         src/platform/zcu104/inc/plat/platform.h
         src/platform/zcu104/inc/plat/psci.h
         src/platform/zcu104/zcu104_desc.c
-        src/lib/virtio_blk.c
-        src/lib/virtio_mmio.c
-        src/lib/virtio_ring.c
-        src/lib/inc/virtio_blk.h
-        src/lib/inc/virtio_mmio.h
-        src/lib/inc/virtio_ring.h
-        src/lib/inc/virtio_types.h
-        src/lib/inc/virtio.h
         )

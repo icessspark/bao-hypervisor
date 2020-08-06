@@ -1,7 +1,5 @@
 CROSS_COMPILE=aarch64-elf-
 IMAGE=Image
-DTB=virt.dtb
-TARGET=linux
 INITRD=initrd.gz
 
 ifeq ($(and $(IMAGE), $(DTB), $(TARGET)),)
