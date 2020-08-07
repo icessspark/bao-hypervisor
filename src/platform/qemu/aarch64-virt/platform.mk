@@ -18,7 +18,7 @@ ARCH:=armv8
 # CPU definition
 CPU:=cortex-a53
 
-drivers = pl011_uart
+drivers = pl011_uart virtio_blk
 
 platform-cppflags =
 platform-cflags = -mcpu=$(CPU)

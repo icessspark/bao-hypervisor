@@ -10,11 +10,14 @@ qemu-system-aarch64 -cpu cortex-a53 \
 -kernel bin/qemu/aarch64-virt/bao.bin \
 -m 4g \
 -device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000 \
+-drive id=test,file=/home/tonny/sda.img,format=raw,if=none \
+-device virtio-blk-device,drive=test \
 -serial stdio \
 -serial tcp:127.0.0.1:12345 \
 -serial tcp:127.0.0.1:12346 \
--nic none \
 -display none
+
+exit
 
 # Use this to connect to the second serial console (run before ./run):
 # stdbuf -i0  nc -l 127.0.0.1 12345

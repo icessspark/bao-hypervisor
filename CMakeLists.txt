@@ -21,6 +21,7 @@ include_directories(
         src/lib/inc
         src/platform/drivers/pl011_uart/inc
         src/platform/drivers/zynq_uart/inc
+        src/platform/drivers/virtio_blk/inc
         src/platform/hikey960/inc
         src/platform/ultra96/inc
         src/platform/zcu102/inc
@@ -113,4 +114,14 @@ add_executable(bao
         src/platform/zcu104/inc/plat/platform.h
         src/platform/zcu104/inc/plat/psci.h
         src/platform/zcu104/zcu104_desc.c
-        )
+        src/lib/printf.c
+        src/lib/inc/printf.h
+        src/platform/drivers/virtio_blk/virtio_blk.c
+        src/platform/drivers/virtio_blk/inc/drivers/virtio_blk.h
+        src/platform/drivers/virtio_blk/inc/drivers/virtio_mmio.h
+        src/platform/drivers/virtio_blk/inc/drivers/virtio_ring.h
+        src/platform/drivers/virtio_blk/inc/drivers/virtio_types.h
+        src/platform/drivers/virtio_blk/inc/drivers/types.h
+        src/platform/drivers/virtio_blk/inc/drivers/virtio.h
+        src/platform/drivers/virtio_blk/inc/drivers/utils.h
+        src/platform/drivers/virtio_blk/inc/drivers/virtio_prelude.h)
