@@ -20,4 +20,4 @@ qemu-system-aarch64 -cpu cortex-a53 \
 exit
 
 # Use this to connect to the second serial console (run before ./run):
-# stdbuf -i0  nc -l 127.0.0.1 12345
+# stdbuf -i0  nc -lk 127.0.0.1 12345

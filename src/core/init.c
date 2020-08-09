@@ -51,16 +51,6 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
     if (cpu.id == CPU_MASTER) {
         virtio_blk_init();
         printk("virtio_blk_init ok\n");
-        char buf[512];
-        virtio_blk_read(8, 1, buf);
-        printk("virtio_blk_read ok\n");
-        int i;
-        for (i = 0; i < 512 ; i++) {
-            printk("%02x ", buf[i]);
-            if ((i + 1) % 32 == 0) {
-                printk("\n");
-            }
-        }
     }
     vmm_init();
 

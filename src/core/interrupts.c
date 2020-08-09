@@ -51,6 +51,8 @@ inline void interrupts_clear(uint64_t int_id)
     interrupts_arch_clear(int_id);
 }
 
+extern void virtio_blk_handler();
+
 inline void interrupts_init()
 {
     interrupts_arch_init();
@@ -63,8 +65,9 @@ inline void interrupts_init()
         interrupts_cpu_glbenable(true);
 
         interrupts_reserve(IPI_CPU_MSG, cpu_msg_handler);
-    }
+        interrupts_reserve(79, virtio_blk_handler);
 
+    }
     interrupts_cpu_enable(IPI_CPU_MSG, true);
 }
 
@@ -80,7 +83,7 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
-    if (int_id != 27)
+    if (int_id != 27 && int_id != 1)
         printk("interrupts_handle %d\n", int_id);
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {
         interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
