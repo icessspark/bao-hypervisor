@@ -4,6 +4,9 @@ build/*
 *.elf
 *.bin
 *.d
+*.dtb
+
+.vscode
 
 configs/*
 !configs/Makefile
