@@ -51,6 +51,9 @@ add_executable(bao
         src/arch/armv8/inc/arch/spinlock.h
         src/arch/armv8/inc/arch/sysregs.h
         src/arch/armv8/inc/arch/tlb.h
+        src/core/inc/virtio_mmio.h
+        src/core/inc/virtq.h
+        src/core/inc/virt_dev.h
         src/arch/armv8/inc/arch/vgicv2.h
         src/arch/armv8/inc/arch/vm.h
         src/arch/armv8/interrupts.c
@@ -86,6 +89,9 @@ add_executable(bao
         src/core/interrupts.c
         src/core/mem.c
         src/core/objcache.c
+        src/core/virtio_mmio.c
+        src/core/virt_dev.c
+        src/core/virtq.c
         src/core/vm.c
         src/core/vmm.c
         src/lib/bit.c

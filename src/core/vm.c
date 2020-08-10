@@ -156,6 +156,10 @@ static void vm_map_img_rgn_inplace(vm_t* vm, const vm_config_t* config,
             PTE_VM_FLAGS);
 }
 
+void vm_virtio_init(vm_t* vm) {
+    virtio_init(vm);
+}
+
 static void vm_map_img_rgn(vm_t* vm, const vm_config_t* config,
                            struct mem_region* reg)
 {
@@ -274,6 +278,10 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
     if (master) {
         vm_init_mem_regions(vm, config);
         vm_init_dev(vm, config);
+    }
+
+    if (master) {
+        vm_virtio_init(vm);
     }
 
     cpu_sync_barrier(&vm->sync);

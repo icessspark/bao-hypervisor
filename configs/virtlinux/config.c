@@ -20,11 +20,11 @@
  * path for the image.
  */
 VM_IMAGE(vm1,../lloader/linux.bin);
-VM_IMAGE(vm2,../lloader/linux2.bin);
+// VM_IMAGE(vm2,../lloader/linux2.bin);
 
 struct config config =
     {    CONFIG_HEADER
-        .vmlist_size = 2,
+        .vmlist_size = 1,
         .vmlist =
             {
                 {
@@ -59,38 +59,39 @@ struct config config =
 
                                  .arch = {.gic = {.gicc_addr = 0x08010000,
                                                   .gicd_addr = 0x08000000}}},
-                },{
-                .image = {.base_addr = 0x40000000,
-                    .load_addr = VM_IMAGE_OFFSET(vm2),
-                    .size = VM_IMAGE_SIZE(vm2)},
+                },
+                // {
+                // .image = {.base_addr = 0x40000000,
+                //     .load_addr = VM_IMAGE_OFFSET(vm2),
+                //     .size = VM_IMAGE_SIZE(vm2)},
 
-                .entry = 0x40000000,
-                .cpu_affinity = 0b1100,
-                .platform = {.cpu_num = 2,
+                // .entry = 0x40000000,
+                // .cpu_affinity = 0b1100,
+                // .platform = {.cpu_num = 2,
 
-                    .region_num = 1,
-                    .regions =
-                    (struct mem_region[]){{.base = 0x40000000,
-                                              .size = 0x10000000}},
+                //     .region_num = 1,
+                //     .regions =
+                //     (struct mem_region[]){{.base = 0x40000000,
+                //                               .size = 0x10000000}},
 
-                    .dev_num = 1,
-                    .devs =
-                    (struct dev_region[]){
-                        {.pa = 0x09110000,
-                            .va = 0x09000000,
-                            .size = 0x1000,
-                            .interrupt_num = 2,
-                            .interrupts =
-                            (uint64_t[]){27, 43}}},
-                    /* Note:
-                     * IRQ 27 is PPI [16,32) interrupt ~ Timer
-                     * IRQ 43 is SPI 10 (32 + 11) interrupt ~ UART1
-                     * UART1 is specified in a special multi-uart qemu:
-                     * https://github.com/tonnylyz/qemu/tree/multi-uart
-                     * */
+                //     .dev_num = 1,
+                //     .devs =
+                //     (struct dev_region[]){
+                //         {.pa = 0x09110000,
+                //             .va = 0x09000000,
+                //             .size = 0x1000,
+                //             .interrupt_num = 2,
+                //             .interrupts =
+                //             (uint64_t[]){27, 43}}},
+                //     /* Note:
+                //      * IRQ 27 is PPI [16,32) interrupt ~ Timer
+                //      * IRQ 43 is SPI 10 (32 + 11) interrupt ~ UART1
+                //      * UART1 is specified in a special multi-uart qemu:
+                //      * https://github.com/tonnylyz/qemu/tree/multi-uart
+                //      * */
 
-                    .arch = {.gic = {.gicc_addr = 0x08010000,
-                        .gicd_addr = 0x08000000}}},
-                }
+                //     .arch = {.gic = {.gicc_addr = 0x08010000,
+                //         .gicd_addr = 0x08000000}}},
+                // }
             },
 };

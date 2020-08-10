@@ -5,8 +5,15 @@ build/*
 *.bin
 *.d
 
+.vscode
+vmlinux
+*.dtb
+*.gz
+
 configs/*
 !configs/Makefile
 !configs/linker.ld 
 !configs/example/
+
+
 

@@ -30,6 +30,8 @@
 #include <interrupts.h>
 #include <bitmap.h>
 #include <iommu.h>
+#include <virtio_mmio.h>
+
 
 typedef struct vm {
     uint64_t id;
@@ -102,6 +104,7 @@ static inline int vm_has_interrupt(vm_t* vm, int int_id)
 /* ------------------------------------------------------------*/
 
 void vm_arch_init(vm_t* vm, const vm_config_t* config);
+void vm_virtio_init(vm_t* vm);
 void vcpu_arch_init(vcpu_t* vcpu, vm_t* vm);
 void vcpu_run(vcpu_t* vcpu);
 uint64_t vcpu_readreg(vcpu_t* vcpu, uint64_t reg);

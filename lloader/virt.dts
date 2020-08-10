@@ -82,4 +82,11 @@
 		linux,initrd-start = <0x40001000>;
 		linux,initrd-end = <0x4010eab1>;
 	};
+
+    virtio_mmio@a000000 {
+		dma-coherent;
+		compatible = "virtio,mmio";
+		interrupts = <0x00 0x10 0x01>;
+		reg = <0x00 0xa000000 0x00 0x200>;
+	};
 };

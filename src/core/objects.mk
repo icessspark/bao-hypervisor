@@ -24,3 +24,6 @@ core-objs-y+=vm.o
 core-objs-y+=config.o
 core-objs-y+=console.o
 core-objs-y+=iommu.o
+core-objs-y+=virtio_mmio.o
+core-objs-y+=virt_dev.o
+core-objs-y+=virtq.o

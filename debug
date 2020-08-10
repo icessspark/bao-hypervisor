@@ -1,0 +1,25 @@
+#!/bin/bash
+pushd lloader
+make DTB=virt.dtb TARGET=linux
+# make DTB=virt2.dtb TARGET=linux2
+popd
+make
+qemu-system-aarch64 -cpu cortex-a53 \
+-machine virt,virtualization=on,gic-version=2 \
+-smp 4 \
+-kernel bin/qemu/aarch64-virt/bao.bin \
+-m 4g \
+-device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000 \
+-drive id=test,file=/home/icespark/project/c_cpp/hypervisor/img/ubuntu-18.04-rootfs_ext4.img,format=raw,if=none \
+-device virtio-blk-device,drive=test \
+-serial stdio \
+-serial tcp:127.0.0.1:12345,server,nowait \
+-display none \
+-s -S
+
+exit
+
+# Use this to connect to the second serial console (run before ./run):
+# stdbuf -i0  nc -lk 127.0.0.1 12345
+
+# -serial tcp:127.0.0.1:12346 \
