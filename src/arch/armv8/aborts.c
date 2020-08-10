@@ -21,6 +21,7 @@
 #include <arch/psci.h>
 #include <drivers/virtio_prelude.h>
 #include <printf.h>
+
 typedef void (*abort_handler_t)(uint32_t, uint64_t, uint64_t);
 
 void aborts_data_lower(uint32_t iss, uint64_t far, uint64_t il)
@@ -85,23 +86,15 @@ void smc64_handler(uint32_t iss, uint64_t far, uint64_t il)
     cpu.vcpu->regs->elr_el2 += pc_step;
 }
 
-static char buf[512];
+//static char buf[0x1000];
 
 void hvc64_handler(uint32_t iss, uint64_t far, uint64_t il) {
-//    uint64_t pa = ipa2pa(cpu.vcpu->regs->elr_el2);
-//    pa = pa - (pa % PAGE_SIZE);
-//    printf("%lx\n", pa);
-//    ppages_t p = mem_ppages_get(pa, 1);
-//    void *va = mem_alloc_vpage(&cpu.as, SEC_HYP_PRIVATE, NULL, 1);
-//    mem_map(&cpu.as, va, &p, 1, PTE_HYP_FLAGS);
-//
-//    printf("%016lx\n", *((uint64_t volatile *)(va)));
-//
-//    mem_free_vpage(&cpu.as, va, 1, false);
-
-    interrupts_cpu_enable(79, true);
-    virtio_blk_read(8, 1, buf);
-
+//    printf("[interrupts_cpu_enable]\n");
+//    interrupts_cpu_enable(79, true);
+//    printf("[virtio_blk_read]\n");
+//    static unsigned long sector = 8;
+//    virtio_blk_read(sector, 4096 / 512, buf);
+//    sector += 8;
     uint64_t pc_step = 2 + (2 * il);
     cpu.vcpu->regs->elr_el2 += pc_step;
 }

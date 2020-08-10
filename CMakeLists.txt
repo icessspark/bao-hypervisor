@@ -123,5 +123,5 @@ add_executable(bao
         src/platform/drivers/virtio_blk/inc/drivers/virtio_types.h
         src/platform/drivers/virtio_blk/inc/drivers/types.h
         src/platform/drivers/virtio_blk/inc/drivers/virtio.h
-        src/lib/inc/at_utils.h
+        src/arch/armv8/inc/at_utils.h
         src/platform/drivers/virtio_blk/inc/drivers/virtio_prelude.h)

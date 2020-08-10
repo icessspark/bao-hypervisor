@@ -9,7 +9,7 @@ void virtio_blk_init();
 
 void virtio_blk_read(unsigned long sector, unsigned long count, void *buf);
 
-void virtio_blk_write(unsigned long sector, unsigned long count, const void *buf);
+void virtio_blk_write(unsigned long sector, unsigned long count, void *buf);
 
 void virtio_blk_handler();
 
