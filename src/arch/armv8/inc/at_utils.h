@@ -23,10 +23,15 @@ static inline uint64_t el2_va2pa(uint64_t el2_va) {
 }
 
 static inline uint64_t ipa2pa(uint64_t ipa) {
-    register uint64_t par, par_saved;
+    register uint64_t par, par_saved, sctlr_el1;
     MRS(par_saved, PAR_EL1);
+    MRS(sctlr_el1, SCTLR_EL1);
+    sctlr_el1 &= ~0b1ull;
+    MSR(SCTLR_EL1, sctlr_el1);
     asm volatile ("AT S12E1R, %0" :: "r"(ipa));
     MRS(par, PAR_EL1);
+    sctlr_el1 |= 0b1ull;
+    MSR(SCTLR_EL1, sctlr_el1);
     MSR(PAR_EL1, par_saved);
     if (par & PAR_F) {
         // address translate failed
