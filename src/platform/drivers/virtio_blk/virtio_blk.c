@@ -15,8 +15,11 @@
 #include <drivers/virtio_ring.h>
 #include <at_utils.h>
 
+
 #include <mem.h>
 #include <cpu.h>
+#include <interrupts.h>
+#include <vm.h>
 #include <printf.h>
 #include <string.h>
 
@@ -108,22 +111,23 @@ void virtio_blk_init()
 
 void virtio_blk_handler()
 {
-    /*
-    printf("disk.used->ring->id %x\n", disk.used->ring->id);
-    printf("disk.used->idx %x\n", disk.used->idx);
-    printf("status %x\n", status);
+    
+    // printf("disk.used->ring->id %x\n", disk.used->ring->id);
+    // printf("disk.used->idx %x\n", disk.used->idx);
+    // printf("status %x\n", status);
 
-    for (int i = 0; i < 1024; ++i) {
-        printf("%02x ", debug_buf[i]);
-        if ((i + 1) % 32 == 0) {
-            printf("\n");
-        }
-    }*/
+    // for (int i = 0; i < 4096; ++i) {
+    //     printf("%02x ", debug_buf[i]);
+    //     if ((i + 1) % 32 == 0) {
+    //         printf("\n");
+    //     }
+    // }
     if (status != 0) {
         panic("virtio_blk_handler: status != 0");
     }
     writel(1, base + VIRTIO_MMIO_INTERRUPT_ACK);
     spin_unlock(&virtio_lock);
+    interrupts_vm_inject(cpu.vcpu->vm, 0x10+32, 0);
 }
 
 void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)

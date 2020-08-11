@@ -30,7 +30,6 @@
 #include <interrupts.h>
 #include <bitmap.h>
 #include <iommu.h>
-#include <virtio_mmio.h>
 
 
 typedef struct vm {

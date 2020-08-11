@@ -47,9 +47,9 @@ struct config config =
                                          {.pa = 0x09100000,
                                           .va = 0x09000000,
                                           .size = 0x1000,
-                                          .interrupt_num = 2,
+                                          .interrupt_num = 3,
                                           .interrupts =
-                                              (uint64_t[]){27, 42}}},
+                                              (uint64_t[]){27, 42, 0x10+32}}},
                  /* Note:
                   * IRQ 27 is PPI [16,32) interrupt ~ Timer
                   * IRQ 42 is SPI 10 (32 + 10) interrupt ~ UART1

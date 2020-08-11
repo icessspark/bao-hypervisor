@@ -72,6 +72,16 @@
 #define VIRTIO_EVENT_STATUS_CHANGE	(1 << 2)
 #define VIRTIO_EVENT_MMIO		    (1 << 3)
 
+#define VIRTIO_DEV_STATUS_ACK		(1)
+#define VIRTIO_DEV_STATUS_DRIVER	(2)
+#define VIRTIO_DEV_STATUS_OK		(4)
+#define VIRTIO_DEV_STATUS_FEATURES_OK	(8)
+#define VIRTIO_DEV_NEEDS_RESET		(64)
+#define VIRTIO_DEV_STATUS_FAILED	(128)
+
+#define VIRTIO_MAX_FEATURE_SIZE		(4)
+
+
 #define VIRTIO_FEATURE_OFFSET(index) \
 	(VIRTIO_MMIO_HOST_FEATURE0 + index * 4)
 
@@ -89,7 +99,6 @@ typedef struct virt_mmio_regs {
     uint32_t drv_feature_sel;       //0x024
     uint32_t q_sel;                 //0x030
     uint32_t q_num_max;             //0x034
-    uint32_t q_num;                 //0x038
     uint32_t q_ready;               //0x044
     uint32_t q_notify;              //0x050
     uint32_t irt_stat;              //0x060
@@ -118,8 +127,8 @@ struct virtio_mmio {
     objcache_t* dev_cache;
     struct virt_dev* dev;
     
-    objcache_t* req_cache;
-    void* req;
+    objcache_t* vq_cache;
+    struct virtq* vq;
 };
 
 typedef struct virtio_mmio virtio_mmio_t;

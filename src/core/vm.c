@@ -156,6 +156,8 @@ static void vm_map_img_rgn_inplace(vm_t* vm, const vm_config_t* config,
             PTE_VM_FLAGS);
 }
 
+extern void virtio_init(vm_t* vm);
+
 void vm_virtio_init(vm_t* vm) {
     virtio_init(vm);
 }

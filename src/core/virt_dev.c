@@ -1,26 +1,7 @@
 #include <virt_dev.h>
 #include <util.h>
 #include <at_utils.h>
-
-void do_notify(uint64_t addr, uint32_t num) {
-    
-    printk("ipa 0x%x%x\n", u64_high_to_u32(addr), u64_low_to_u32(addr));
-    printk("el2_pa 0x%x%x\n", u64_high_to_u32(ipa2pa(addr)), u64_low_to_u32(ipa2pa(addr)));
-
-    ppages_t p = mem_ppages_get(ipa2pa(addr), 2);
-    void *desc = mem_alloc_vpage(&cpu.as, SEC_HYP_PRIVATE, NULL, 2);
-    mem_map(&cpu.as, desc, &p, 2, PTE_HYP_FLAGS);
-
-    struct vring_desc *vdesc = desc; 
-    struct vring_avail *vavil = desc + 16 * num; 
-    struct vring_used *vused = desc + PAGE_SIZE;
-    
-    for(int i=0;i<num;i++) {
-        printk("index %d addr 0x%x%x len 0x%x flags 0x%x next 0x%x\n", 
-            i, u64_high_to_u32(vdesc[i].addr), u64_low_to_u32(vdesc[i].addr), 
-            vdesc[i].len, vdesc[i].flags, vdesc[i].next);
-    }
-}
+#include <drivers/virtio_prelude.h>
 
 
 bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
@@ -30,36 +11,37 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
         case VIRTIO_TYPE_BLOCK:
             // 分配virt_dev对象给virtio_mmio
             objcache_init(&virtio_mmio->dev_cache, sizeof(virt_dev_t), SEC_HYP_GLOBAL,true);
-            virt_dev_t *dev = objcache_alloc(&virtio_mmio->dev_cache);
+            virt_dev_t* dev = objcache_alloc(&virtio_mmio->dev_cache);
             
             // 分配blk_desc对象并初始化
             objcache_init(&dev->desc_cache, sizeof(blk_desc_t), SEC_HYP_GLOBAL, true);
-            blk_desc_t *blk = objcache_alloc(&dev->desc_cache);
+            blk_desc_t* blk = objcache_alloc(&dev->desc_cache);
             blk_cfg_init(blk);
             dev->desc = (void *) blk;
             dev->generation = 0;
-
-            // 分配vq_desc_cache对象并初始化
-            objcache_init(&dev->vq_cache, sizeof(virq_t), SEC_HYP_GLOBAL, true);
-            virq_t *vq = objcache_alloc(&dev->vq_cache);
-            dev->vq = vq;
-            virtio_mmio->regs.q_num_max = VIRTQUEUE_MAX_SIZE;
-
-            // 初始化blk相关的features
-            blk_features_init(&dev->features);
-
-            // 初始化req
-            objcache_init(&virtio_mmio->req_cache, sizeof(struct virtio_blk_req), SEC_HYP_GLOBAL, true);
-            struct virtio_blk_req *req = objcache_alloc(&virtio_mmio->req_cache);
-            virtio_mmio->req = req;
-
-            // virt_dev和virtio_mmio相互关联
-            virtio_mmio->dev = dev;
-            dev->master = virtio_mmio;
             dev->type = type;
+            dev->handler = blk_req_handler;
+
+            // 初始化blk相关的features和req
+            blk_features_init(&dev->features);
+            objcache_init(&dev->req_cache, sizeof(struct virtio_blk_req), SEC_HYP_GLOBAL, true);
+            struct virtio_blk_req* req = objcache_alloc(&dev->req_cache);
+            req->reserved = 0;
+
+            // 分配vq_cache对象并初始化
+            objcache_init(&virtio_mmio->vq_cache, sizeof(virtq_t), SEC_HYP_GLOBAL, true);
+            virtq_t *vq = objcache_alloc(&virtio_mmio->vq_cache);
+            vq->notify_handler = process_guest_blk_notify;
+            vq->last_avail_idx = 0;
+	        vq->avail_idx = 0;
+	        vq->last_used_idx = 0;
+
+            // virtio_mmio和virt_dev、virtq相互关联
+            virtio_mmio->dev = dev;
+            virtio_mmio->vq = vq;
 
             // 设定virtio_mmio的handler类型
-            dev->master->handler = virtio_be_blk_handler;
+            virtio_mmio->handler = virtio_be_blk_handler;
 
             break;
         default:
@@ -106,10 +88,10 @@ void blk_cfg_init(blk_desc_t *blk_cfg) {
     /* ... */
 }
 
-void virt_dev_reset(virt_dev_t* dev){
-    dev->master->regs.dev_stat = 0;
-    dev->master->regs.irt_stat = 0;
-    dev->master->regs.q_ready = 0;
+void virt_dev_reset(virtio_mmio_t* v_m){
+    v_m->regs.dev_stat = 0;
+    v_m->regs.irt_stat = 0;
+    v_m->regs.q_ready = 0;
 }
 
 // TODO: reconsider the implement location
@@ -164,6 +146,11 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 value = virtio_mmio->regs.q_ready;
                 printk("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
                 break;
+            case VIRTIO_MMIO_INTERRUPT_STATUS:
+                // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS
+                value = 1;
+                printk("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
+                break;
             case VIRTIO_MMIO_CONFIG_GENERATION:
                 value = virtio_mmio->dev->generation;
                 printk("read VIRTIO_MMIO_CONFIG_GENERATION 0x%x\n\r", value);
@@ -186,7 +173,7 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 virtio_mmio->regs.dev_stat = value;
                 printk("write device_state 0x%x\n\r", value);
                 if(virtio_mmio->regs.dev_stat == 0) {
-                    virt_dev_reset(virtio_mmio->dev);
+                    virt_dev_reset(virtio_mmio);
                 }
                 break;
             case VIRTIO_MMIO_HOST_FEATURES_SEL:
@@ -210,13 +197,17 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 printk("write q_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NUM:
-                virtio_mmio->regs.q_num = value;
+                virtio_mmio->vq->num = value;
                 printk("write q_num 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NOTIFY:
                 virtio_mmio->regs.q_notify = value;
-                printk("write q_notify 0x%x\n\r", value);             
-                do_notify(u32_to_u64_high(virtio_mmio->regs.q_desc_h) | u32_to_u64_low(virtio_mmio->regs.q_desc_l), virtio_mmio->regs.q_num);
+                printk("write q_notify 0x%x\n\r", value);
+                virtio_mmio->vq->notify_handler(virtio_mmio->vq, virtio_mmio);
+                break;
+            case VIRTIO_MMIO_INTERRUPT_ACK:
+                virtio_mmio->regs.irt_ack = value;
+                printk("write irt_ack 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_LOW:
                 virtio_mmio->regs.q_desc_l = value;
@@ -253,4 +244,17 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
     }
 
     return true;
+}
+
+void blk_req_handler(void* req, void* buffer) {
+
+    struct virtio_blk_req* blk_req = req;
+
+    printf("interrupts_cpu_enable\n");
+    interrupts_cpu_enable(79, true);
+    uint64_t sector = blk_req->sector;
+    uint32_t len = blk_req->len;
+    printf("virtio_blk_read, sector 0x%lx, len 0x%x\n", sector, len);
+    virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
+    printf("hello\n");
 }

@@ -42,6 +42,8 @@ bool virtio_mmio_init(virtio_mmio_t* virtio_mmio) {
     virtio_mmio->regs.device_id = virtio_mmio->type;
     virtio_mmio->regs.dev_feature = 0;
     virtio_mmio->regs.drv_feature = 0;
+    virtio_mmio->regs.q_num_max = VIRTQUEUE_MAX_SIZE;
+
 
     if(!virt_dev_init(virtio_mmio)) {
         ERROR("virt_device init error!");
