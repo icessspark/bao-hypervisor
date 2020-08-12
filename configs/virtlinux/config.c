@@ -19,12 +19,12 @@
  * Declare VM images using the VM_IMAGE macro, passing an identifier and the
  * path for the image.
  */
-VM_IMAGE(vm1,../lloader/linux.bin);
+VM_IMAGE(vm1, ../lloader/linux.bin);
 // VM_IMAGE(vm2,../lloader/linux2.bin);
 
 struct config config =
-    {    CONFIG_HEADER
-        .vmlist_size = 1,
+    {
+        CONFIG_HEADER.vmlist_size = 1,
         .vmlist =
             {
                 {
@@ -38,8 +38,9 @@ struct config config =
 
                                  .region_num = 1,
                                  .regions =
-                                     (struct mem_region[]){{.base = 0x40000000,
-                                                            .size = 0x10000000}},
+                                     (struct mem_region[]){
+                                         {.base = 0x40000000,
+                                          .size = 0x10000000}},
 
                                  .dev_num = 1,
                                  .devs =
@@ -49,13 +50,14 @@ struct config config =
                                           .size = 0x1000,
                                           .interrupt_num = 3,
                                           .interrupts =
-                                              (uint64_t[]){27, 42, 0x10+32}}},
-                 /* Note:
-                  * IRQ 27 is PPI [16,32) interrupt ~ Timer
-                  * IRQ 42 is SPI 10 (32 + 10) interrupt ~ UART1
-                  * UART1 is specified in a special multi-uart qemu:
-                  * https://github.com/tonnylyz/qemu/tree/multi-uart
-                  * */
+                                              (uint64_t[]){27, 42, 0x10 + 32}}},
+                                 /* Note:
+                                  * IRQ 27 is PPI [16,32) interrupt ~ Timer
+                                  * IRQ 42 is SPI 10 (32 + 10) interrupt ~ UART1
+                                  * UART1 is specified in a special multi-uart
+                                  * qemu:
+                                  * https://github.com/tonnylyz/qemu/tree/multi-uart
+                                  * */
 
                                  .arch = {.gic = {.gicc_addr = 0x08010000,
                                                   .gicd_addr = 0x08000000}}},

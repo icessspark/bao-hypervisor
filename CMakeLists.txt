@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.9)
 project(bao)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON )
+add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 
 include_directories(
         src/arch/armv8/inc
@@ -88,6 +90,7 @@ add_executable(bao
         src/core/init.c
         src/core/interrupts.c
         src/core/mem.c
+        src/core/iommu.c
         src/core/objcache.c
         src/core/virtio_mmio.c
         src/core/virt_dev.c

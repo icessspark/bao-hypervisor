@@ -1,5 +1,5 @@
-/** 
- * Bao, a Lightweight Static Partitioning Hypervisor 
+/**
+ * Bao, a Lightweight Static Partitioning Hypervisor
  *
  * Copyright (c) Bao Project (www.bao-project.org), 2019-
  *
@@ -11,16 +11,16 @@
  * Bao is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License version 2 as published by the Free
  * Software Foundation, with a special exception exempting guest code from such
- * license. See the COPYING file in the top-level directory for details. 
+ * license. See the COPYING file in the top-level directory for details.
  *
  */
 
-#include <iommu.h>
 #include <arch/smmuv2.h>
+#include <iommu.h>
 
 int iommu_arch_init()
 {
-    if(platform.arch.smmu.base){
+    if (platform.arch.smmu.base) {
         smmu_init();
         return 0;
     }
@@ -32,7 +32,6 @@ static int32_t iommu_vm_arch_init_ctx(vm_t *vm)
 {
     int32_t ctx_id = vm->iommu.arch.ctx_id;
     if (ctx_id < 0) {
-
         /* Set up ctx bank to vm address space in an available ctx. */
         ctx_id = smmu_alloc_ctxbnk();
         if (ctx_id >= 0) {
@@ -55,15 +54,15 @@ static int iommu_vm_arch_add(vm_t *vm, uint16_t mask, uint16_t id)
     uint16_t glbl_mask = vm->iommu.arch.global_mask;
     uint16_t prep_mask = (mask & SMMU_ID_MSK) | glbl_mask;
     uint16_t prep_id = (id & SMMU_ID_MSK);
-    bool group = (bool) mask;
-    
-    if(vm_ctx < 0){
+    bool group = (bool)mask;
+
+    if (vm_ctx < 0) {
         return -1;
     }
 
     if (!smmu_compatible_sme_exists(prep_mask, prep_id, vm_ctx, group)) {
         int32_t sme = smmu_alloc_sme();
-        if(sme < 0){
+        if (sme < 0) {
             INFO("iommu: smmuv2 no more free sme available.");
             return -1;
         }
@@ -90,7 +89,7 @@ int iommu_arch_vm_init(vm_t *vm, const vm_config_t *config)
         /* Register each group. */
         const struct smmu_group *group =
             &config->platform.arch.smmu.smmu_groups[i];
-        if(iommu_vm_arch_add(vm, group->group_mask, group->group_id) < 0){
+        if (iommu_vm_arch_add(vm, group->group_mask, group->group_id) < 0) {
             return -1;
         }
     }

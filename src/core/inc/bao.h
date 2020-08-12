@@ -21,40 +21,41 @@
 
 #ifndef __ASSEMBLER__
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <printf.h>
 #include <util.h>
 
 #define DEBUG_ON 1
 
-#define INFO(args...)              \
-    {                              \
-        printf("INFO: " args);     \
-        printf("\n");              \
+#define INFO(args...)          \
+    {                          \
+        printf("INFO: " args); \
+        printf("\n");          \
     }
 
-#define WARNING(args...)              \
-    {                                 \
-        printf("WARNING: " args);     \
-        printf("\n");                 \
+#define WARNING(args...)          \
+    {                             \
+        printf("WARNING: " args); \
+        printf("\n");             \
     }
 
-#define ERROR(args...)              \
+#define ERROR(args...)          \
+    {                           \
+        printf("ERROR: " args); \
+        printf("\n");           \
+        while (1)               \
+            ;                   \
+    }
+
+#define DEBUG(args...)              \
     {                               \
-        printf("ERROR: " args);     \
-        printf("\n");               \
-        while (1);                  \
+        if (DEBUG_ON) {             \
+            printf("DEBUG: " args); \
+        }                           \
     }
-
-#define DEBUG(args...)                  \
-    {                                   \
-        if(DEBUG_ON) {                  \
-            printf("DEBUG: " args);     \
-        }                               \
-    }                                   
 
 #endif /* __ASSEMBLER__ */
 

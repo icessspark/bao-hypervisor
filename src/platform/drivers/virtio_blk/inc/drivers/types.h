@@ -15,5 +15,4 @@ typedef u16 __u16;
 typedef u32 __u32;
 typedef u64 __u64;
 
-
-#endif //VIRTIO_TYPES_H
+#endif  // VIRTIO_TYPES_H

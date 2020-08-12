@@ -24,7 +24,7 @@
 
 /* align VAL to TO which must be power a two */
 #define ALIGN(VAL, TO) ((((VAL) + (TO)-1) / (TO)) * TO)
-#define NUM_PAGES(SZ) (ALIGN(SZ, PAGE_SIZE)/PAGE_SIZE)
+#define NUM_PAGES(SZ) (ALIGN(SZ, PAGE_SIZE) / PAGE_SIZE)
 
 #define SR_OR(VAL, SHIFT) (((VAL) >> (SHIFT)) | VAL)
 /* Next Power Of Two */
@@ -52,19 +52,23 @@
 
 #endif
 
-static inline uint32_t u64_low_to_u32(uint64_t n64) {
+static inline uint32_t u64_low_to_u32(uint64_t n64)
+{
     return n64 & 0xffffffff;
 }
 
-static inline uint32_t u64_high_to_u32(uint64_t n64) {
+static inline uint32_t u64_high_to_u32(uint64_t n64)
+{
     return (n64 & 0xffffffff00000000) >> 32;
 }
 
-static inline uint64_t u32_to_u64_low(uint32_t n32) {
+static inline uint64_t u32_to_u64_low(uint32_t n32)
+{
     return (uint64_t)(n32);
 }
 
-static inline uint64_t u32_to_u64_high(uint32_t n32) {
+static inline uint64_t u32_to_u64_high(uint32_t n32)
+{
     return (uint64_t)(n32) << 32;
 }
 

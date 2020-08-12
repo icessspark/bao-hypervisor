@@ -16,8 +16,8 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
-#include <bao.h>
 #include <arch/platform.h>
+#include <bao.h>
 #include <plat/platform.h>
 
 struct mem_region {

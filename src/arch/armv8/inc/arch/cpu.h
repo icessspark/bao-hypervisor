@@ -16,8 +16,8 @@
 #ifndef __ARCH_CPU_H__
 #define __ARCH_CPU_H__
 
-#include <bao.h>
 #include <arch/psci.h>
+#include <bao.h>
 
 #define CPU_MASTER (0UL)
 #define CPU_MAX (8UL)

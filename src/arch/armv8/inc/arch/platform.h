@@ -37,7 +37,7 @@ struct arch_platform {
         struct smmu_group {
             uint16_t group_mask;
             uint16_t group_id;
-        } *smmu_groups;
+        } * smmu_groups;
 
     } smmu;
 

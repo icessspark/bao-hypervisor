@@ -13,9 +13,9 @@
  *
  */
 
-#include <mem.h>
-#include <cpu.h>
 #include <arch/sysregs.h>
+#include <cpu.h>
+#include <mem.h>
 
 void as_arch_init(addr_space_t* as)
 {

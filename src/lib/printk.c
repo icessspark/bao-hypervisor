@@ -15,9 +15,9 @@
 
 #include <printk.h>
 
-#include <string.h>
-#include <stdarg.h>
 #include <console.h>
+#include <stdarg.h>
+#include <string.h>
 
 #define PRINT_TEXT_LEN 0x100
 
