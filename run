@@ -10,7 +10,7 @@ qemu-system-aarch64 -cpu cortex-a53 \
 -kernel bin/qemu/aarch64-virt/bao.bin \
 -m 4g \
 -device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000 \
--drive id=test,file=/home/icespark/project/c_cpp/hypervisor/img/ubuntu-18.04-rootfs_ext4.img,format=raw,if=none \
+-drive id=test,file=/home/icespark/project/c_cpp/hypervisor/img/arch.img,format=raw,if=none \
 -device virtio-blk-device,drive=test \
 -serial stdio \
 -serial tcp:127.0.0.1:12345 \
@@ -18,7 +18,7 @@ qemu-system-aarch64 -cpu cortex-a53 \
 
 exit
 
-# Use this to connect to the second serial console (run before ./run):
-# stdbuf -i0  nc -lk 127.0.0.1 12345
+# Use this to connect to the second serial console (run after qemu boot):
+# stdbuf -i0  nc 127.0.0.1 12345
 
 # -serial tcp:127.0.0.1:12346 \

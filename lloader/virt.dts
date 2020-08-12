@@ -78,8 +78,7 @@
 
 	chosen {
 		stdout-path = "/pl011@9000000";
-		bootargs = "earlycon console=ttyAMA0 root=/dev/vda ro init=/bin/bash";
-		// bootargs = "earlycon console=ttyAMA0 rdinit=/sbin/init";
+		bootargs = "console=ttyAMA0 root=/dev/vda rw noaudit";
 		linux,initrd-start = <0x40001000>;
 		linux,initrd-end = <0x4010eab1>;
 	};

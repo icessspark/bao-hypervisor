@@ -123,10 +123,11 @@ void virtio_blk_handler()
     //     }
     // }
     if (status != 0) {
-        panic("virtio_blk_handler: status != 0");
+        printf("status %d\n", status);
+        WARNING("virtio_blk_handler: status != 0");
     }
     writel(1, base + VIRTIO_MMIO_INTERRUPT_ACK);
-    // spin_unlock(&virtio_lock);
+    //spin_unlock(&virtio_lock);
     interrupts_vm_inject(cpu.vcpu->vm, 0x10+32, 0);
 }
 
@@ -183,7 +184,6 @@ void virtio_blk_read(unsigned long sector, unsigned long count, void *buf)
     // debug_buf = buf;
     virtio_disk_rw(sector, count, buf, 0);
     spin_unlock(&virtio_lock);
-
 }
 
 void virtio_blk_write(unsigned long sector, unsigned long count, void *buf)

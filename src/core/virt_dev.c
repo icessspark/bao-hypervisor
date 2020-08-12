@@ -2,10 +2,26 @@
 #include <util.h>
 #include <at_utils.h>
 #include <drivers/virtio_prelude.h>
-
-#define DEBUG_ON 1
+#include <printf.h>
 
 extern spinlock_t req_handler_lock;
+
+void blk_features_init(uint64_t* features) {
+    *features |= VIRTIO_F_VERSION_1;          // This indicates compliance with this specification,
+    // giving a simple way to detect legacy devices or drivers.
+    *features |=VIRTIO_BLK_F_SIZE_MAX;
+    // *features |= VIRTIO_BLK_F_SIZE_MAX;       /* Indicates maximum segment size */
+    *features |= VIRTIO_BLK_F_SEG_MAX;        /* Indicates maximum # of segments */
+    // *features |= VIRTIO_BLK_F_GEOMETR;        /* Legacy geometry available */
+    // *features |= VIRTIO_BLK_F_RO;             /* Disk is read-only */
+    // *features |= VIRTIO_BLK_F_BLK_SIZE;       /* Block size of disk is available*/
+    // TODO: add flush support
+    // *features |= VIRTIO_BLK_F_FLUSH;          /* Flush command supported */
+    // *features |= VIRTIO_BLK_F_TOPOLOGY;       /* Topology information is available */
+    // *features |= VIRTIO_BLK_F_CONFIG_WCE;     /* Writeback mode available in config */
+    // *features |= VIRTIO_BLK_F_DISCARD;        /* Trim blocks */
+    // *features |= VIRTIO_BLK_F_WRITE_ZEROES;   /* Write zeros */
+}
 
 bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
     uint32_t type = virtio_mmio->type;
@@ -15,7 +31,7 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
             // 分配virt_dev对象给virtio_mmio
             objcache_init(&virtio_mmio->dev_cache, sizeof(virt_dev_t), SEC_HYP_GLOBAL,true);
             virt_dev_t* dev = objcache_alloc(&virtio_mmio->dev_cache);
-            
+
             // 分配blk_desc对象并初始化
             objcache_init(&dev->desc_cache, sizeof(blk_desc_t), SEC_HYP_GLOBAL, true);
             blk_desc_t* blk = objcache_alloc(&dev->desc_cache);
@@ -55,27 +71,10 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
     return true;
 }
 
-void blk_features_init(uint64_t* features) {
-    *features |= VIRTIO_F_VERSION_1;          // This indicates compliance with this specification, 
-                                              // giving a simple way to detect legacy devices or drivers.
-    // *features |= VIRTIO_BLK_F_SIZE_MAX;       /* Indicates maximum segment size */
-    *features |= VIRTIO_BLK_F_SEG_MAX;        /* Indicates maximum # of segments */
-    // *features |= VIRTIO_BLK_F_GEOMETR;        /* Legacy geometry available */
-    // *features |= VIRTIO_BLK_F_RO;             /* Disk is read-only */
-    // *features |= VIRTIO_BLK_F_BLK_SIZE;       /* Block size of disk is available*/
-    // TODO: add flush support
-    // *features |= VIRTIO_BLK_F_FLUSH;          /* Flush command supported */
-    // *features |= VIRTIO_BLK_F_TOPOLOGY;       /* Topology information is available */
-    // *features |= VIRTIO_BLK_F_CONFIG_WCE;     /* Writeback mode available in config */
-    // *features |= VIRTIO_BLK_F_DISCARD;        /* Trim blocks */
-    // *features |= VIRTIO_BLK_F_WRITE_ZEROES;   /* Write zeros */
-}
-
 // TODO: complete blk cfg
 void blk_cfg_init(blk_desc_t *blk_cfg) {
-    uint32_t size = 20480*1024*1024;
-    blk_cfg->capacity = size / SECTOR_BSIZE;
-	blk_cfg->size_max = 0;	/* not negotiated */
+    blk_cfg->capacity = 5120000;
+	blk_cfg->size_max = 0x1000;	/* not negotiated */
 	blk_cfg->seg_max = BLOCKIF_IOV_MAX;
 	blk_cfg->geometry.cylinders = 0;	/* no geometry */
 	blk_cfg->geometry.heads = 0;
@@ -105,8 +104,8 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
     virtio_mmio_t* virtio_mmio = get_virt_mmio(addr);
 
     spin_lock(&req_handler_lock);
-
-    INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to host" : "read from host");
+    
+//    INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to host" : "read from host");
 
     if(addr < VIRTIO_MMIO_ADDRESS) {
         ERROR("virtio_emul_handler address error");
@@ -124,18 +123,18 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 break;
             case VIRTIO_MMIO_VERSION:
                 value = virtio_mmio->regs.version;
-                DEBUG("read VIRTIO_MMIO_VERSION 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_VERSION 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_DEVICE_ID:
                 value = virtio_mmio->regs.device_id;
-                DEBUG("read VIRTIO_MMIO_DEVICE_ID 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_DEVICE_ID 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_VENDOR_ID:
                 value = virtio_mmio->regs.vendor_id;
                 break;
             case VIRTIO_MMIO_STATUS:
                 value = virtio_mmio->regs.dev_stat;
-                DEBUG("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_HOST_FEATURES:
                 if(virtio_mmio->regs.dev_feature_sel)
@@ -143,24 +142,24 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 else
                     virtio_mmio->regs.dev_feature = u64_low_to_u32(virtio_mmio->dev->features);
                 value = virtio_mmio->regs.dev_feature;
-                DEBUG("read VIRTIO_MMIO_HOST_FEATURES 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_HOST_FEATURES 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NUM_MAX:
                 value = virtio_mmio->regs.q_num_max;
-                DEBUG("read VIRTIO_MMIO_QUEUE_NUM_MAX 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_QUEUE_NUM_MAX 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_READY:
                 value = virtio_mmio->regs.q_ready;
-                DEBUG("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_INTERRUPT_STATUS:
                 // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS
                 value = 1;
-                DEBUG("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_CONFIG_GENERATION:
                 value = virtio_mmio->dev->generation;
-                DEBUG("read VIRTIO_MMIO_CONFIG_GENERATION 0x%x\n\r", value);
+//                printk("read VIRTIO_MMIO_CONFIG_GENERATION 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_CONFIG ... VIRTIO_MMIO_REGS_END:
                 value = *(uint64_t*)(virtio_mmio->dev->desc + offset - VIRTIO_MMIO_CONFIG);
@@ -178,22 +177,22 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
         {
             case VIRTIO_MMIO_STATUS:
                 virtio_mmio->regs.dev_stat = value;
-                DEBUG("write device_state 0x%x\n\r", value);
+//                printk("write device_state 0x%x\n\r", value);
                 if(virtio_mmio->regs.dev_stat == 0) {
                     virt_dev_reset(virtio_mmio);
                 }
                 break;
             case VIRTIO_MMIO_HOST_FEATURES_SEL:
                 virtio_mmio->regs.dev_feature_sel = value;
-                DEBUG("write dev_feature_sel 0x%x\n\r", value);
+//                printk("write dev_feature_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_GUEST_FEATURES_SEL:
                 virtio_mmio->regs.drv_feature_sel = value;
-                DEBUG("write drv_feature_sel 0x%x\n\r", value);
+//                printk("write drv_feature_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_GUEST_FEATURES:
                 virtio_mmio->regs.drv_feature = value;
-                DEBUG("write VIRTIO_MMIO_GUEST_FEATURES 0x%x!\n\r", value);
+//                printk("write VIRTIO_MMIO_GUEST_FEATURES 0x%x!\n\r", value);
                 if(virtio_mmio->regs.drv_feature_sel)
                     virtio_mmio->driver_features |= u32_to_u64_high(virtio_mmio->regs.drv_feature);
                 else
@@ -201,48 +200,48 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 break;
             case VIRTIO_MMIO_QUEUE_SEL:
                 virtio_mmio->regs.q_sel = value;
-                DEBUG("write q_sel 0x%x\n\r", value);
+//                printk("write q_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NUM:
                 virtio_mmio->vq->num = value;
-                DEBUG("write q_num 0x%x\n\r", value);
+//                printk("write q_num 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NOTIFY:
                 virtio_mmio->regs.q_notify = value;
-                DEBUG("write q_notify 0x%x\n\r", value);
+//                printk("write q_notify 0x%x\n\r", value);
                 virtio_mmio->vq->notify_handler(virtio_mmio->vq, virtio_mmio);
                 break;
             case VIRTIO_MMIO_INTERRUPT_ACK:
                 virtio_mmio->regs.irt_ack = value;
-                DEBUG("write irt_ack 0x%x\n\r", value);
+//                printk("write irt_ack 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_LOW:
                 virtio_mmio->regs.q_desc_l = value;
-                DEBUG("write q_desc_l 0x%x\n\r", value);
+//                printk("write q_desc_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_HIGH:
                 virtio_mmio->regs.q_desc_h = value;
-                DEBUG("write q_desc_h 0x%x\n\r", value);
+//                printk("write q_desc_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_AVAIL_LOW:
                 virtio_mmio->regs.q_drv_l = value;
-                DEBUG("write q_drv_l 0x%x\n\r", value);
+//                printk("write q_drv_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_AVAIL_HIGH:
                 virtio_mmio->regs.q_drv_h = value;
-                DEBUG("write q_drv_h 0x%x\n\r", value);
+//                printk("write q_drv_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_USED_LOW:
                 virtio_mmio->regs.q_dev_l = value;
-                DEBUG("write q_dev_l 0x%x\n\r", value);
+//                printk("write q_dev_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_USED_HIGH:
                 virtio_mmio->regs.q_dev_h = value;
-                DEBUG("write q_dev_h 0x%x\n\r", value);
+//                printk("write q_dev_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_READY:
                 virtio_mmio->regs.q_ready = value;
-                DEBUG("write q_ready 0x%x\n\r", value);
+//                printk("write q_ready 0x%x\n\r", value);
                 break;
             default:
                 ERROR("virtio_emul_handler wrong reg write 0x%x", addr);
@@ -263,7 +262,15 @@ void blk_req_handler(void* req, void* buffer) {
     interrupts_cpu_enable(79, true);
     uint64_t sector = blk_req->sector;
     uint32_t len = blk_req->len;
-    printf("virtio_blk_read, sector 0x%lx, len 0x%x\n", sector, len);
-    virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
 
+    if (blk_req->type == 0) {
+        printf("[R]:  sector %08lx, len %04x\n", sector, len);
+        virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
+    } else if (blk_req->type == 1) {
+        printf("[W]: sector %08lx, len %04x\n", sector, len);
+        virtio_blk_write(sector, len / SECTOR_BSIZE, buffer);
+    } else {
+        printf("type %d ", blk_req->type);
+        //panic("blk_req->type!");
+    }
 }

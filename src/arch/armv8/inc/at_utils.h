@@ -8,6 +8,7 @@
 #include <bao.h>
 #include <arch/sysregs.h>
 #include <mem.h>
+#include <cpu.h>
 
 static inline uint64_t el2_va2pa(uint64_t el2_va) {
     register uint64_t par, par_saved;
@@ -42,13 +43,15 @@ static inline uint64_t ipa2pa(uint64_t ipa) {
     }
 }
 
-static inline uint64_t ipa2va(addr_space_t* as, uint64_t ipa, uint32_t size, uint32_t section) {
+static inline void* ipa2va(uint64_t ipa)
+{
     uint64_t pa = ipa2pa(ipa);
-    uint64_t offset = pa & 0xfff;
-    void *va = mem_alloc_vpage(as, section, NULL, size);
-    mem_map_dev(as, va, pa & ~0xfff, size);
+    uint64_t offset = pa & (PAGE_SIZE - 1);
+    void *va = mem_alloc_vpage(&cpu.as, SEC_HYP_PRIVATE, NULL, 1);
+    ppages_t ppages = mem_ppages_get(pa & ~(PAGE_SIZE - 1), 1);
+    mem_map(&cpu.as, va, &ppages, 1, PTE_HYP_FLAGS);
 
-    return (uint64_t)(va+offset);
+    return va+offset;
 }
 
 static inline void writeb(uint8_t value, void* addr) {
