@@ -45,7 +45,7 @@ struct virtq {
 	uint16_t last_avail_idx;
 	uint16_t avail_idx;
 	uint16_t last_used_idx;
-	uint16_t used_flags;
+	// uint16_t used_flags;
 	uint16_t vq_index;
 
 	void (*notify_handler)(struct virtq *, struct virtio_mmio *);

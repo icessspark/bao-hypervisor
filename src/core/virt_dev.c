@@ -4,6 +4,8 @@
 #include <drivers/virtio_prelude.h>
 
 
+extern spinlock_t req_handler_lock;
+
 bool virt_dev_init(virtio_mmio_t* virtio_mmio) {
     uint32_t type = virtio_mmio->type;
 
@@ -58,8 +60,9 @@ void blk_features_init(uint64_t* features) {
     // *features |= VIRTIO_BLK_F_SIZE_MAX;       /* Indicates maximum segment size */
     *features |= VIRTIO_BLK_F_SEG_MAX;        /* Indicates maximum # of segments */
     // *features |= VIRTIO_BLK_F_GEOMETR;        /* Legacy geometry available */
-    *features |= VIRTIO_BLK_F_RO;             /* Disk is read-only */
+    // *features |= VIRTIO_BLK_F_RO;             /* Disk is read-only */
     // *features |= VIRTIO_BLK_F_BLK_SIZE;       /* Block size of disk is available*/
+    // TODO: add flush support
     // *features |= VIRTIO_BLK_F_FLUSH;          /* Flush command supported */
     // *features |= VIRTIO_BLK_F_TOPOLOGY;       /* Topology information is available */
     // *features |= VIRTIO_BLK_F_CONFIG_WCE;     /* Writeback mode available in config */
@@ -69,7 +72,7 @@ void blk_features_init(uint64_t* features) {
 
 // TODO: complete blk cfg
 void blk_cfg_init(blk_desc_t *blk_cfg) {
-    uint32_t size = 100*1024*1024;
+    uint32_t size = 20480*1024*1024;
     blk_cfg->capacity = size / SECTOR_BSIZE;
 	blk_cfg->size_max = 0;	/* not negotiated */
 	blk_cfg->seg_max = BLOCKIF_IOV_MAX;
@@ -97,9 +100,12 @@ void virt_dev_reset(virtio_mmio_t* v_m){
 // TODO: reconsider the implement location
 bool virtio_be_blk_handler(emul_access_t *acc) {
     uint64_t addr = acc->addr;
-    INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to host" : "read from host");
 
     virtio_mmio_t* virtio_mmio = get_virt_mmio(addr);
+
+    spin_lock(&req_handler_lock);
+    
+    INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to host" : "read from host");
 
     if(addr < VIRTIO_MMIO_ADDRESS) {
         ERROR("virtio_emul_handler address error");
@@ -243,6 +249,8 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
         }
     }
 
+    spin_unlock(&req_handler_lock);
+
     return true;
 }
 
@@ -250,11 +258,11 @@ void blk_req_handler(void* req, void* buffer) {
 
     struct virtio_blk_req* blk_req = req;
 
-    printf("interrupts_cpu_enable\n");
+    // printf("interrupts_cpu_enable\n");
     interrupts_cpu_enable(79, true);
     uint64_t sector = blk_req->sector;
     uint32_t len = blk_req->len;
     printf("virtio_blk_read, sector 0x%lx, len 0x%x\n", sector, len);
     virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
-    printf("hello\n");
+
 }

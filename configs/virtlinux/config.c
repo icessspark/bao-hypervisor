@@ -33,8 +33,8 @@ struct config config =
                               .size = VM_IMAGE_SIZE(vm1)},
 
                     .entry = 0x40000000,
-                    .cpu_affinity = 0b0011,
-                    .platform = {.cpu_num = 2,
+                    .cpu_affinity = 0b0001,
+                    .platform = {.cpu_num = 1,
 
                                  .region_num = 1,
                                  .regions =

@@ -39,7 +39,7 @@
 #ifndef SECTOR_BSIZE
 # define SECTOR_BSIZE	512
 #endif
-#define BLOCKIF_IOV_MAX		33	/* not practical to be IOV_MAX */
+#define BLOCKIF_IOV_MAX		1	/* not practical to be IOV_MAX */
 
 /* BLOCK REQUEST TYPE*/
 #define VIRTIO_BLK_T_IN             0 

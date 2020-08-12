@@ -2,12 +2,13 @@
 #include <virtio_mmio.h>
 
 virtio_mmio_manager_t virtio_mmio_manager = { .num = 0 };
+spinlock_t req_handler_lock = SPINLOCK_INITVAL;
 
 void virtio_init(vm_t* vm) {
 
     INFO("virtio_init");
 
-    add_virt_mmio();
+    add_virtio_mmio();
 
     for(int i=0;i<virtio_mmio_manager.num;i++) {
         virtio_mmio_t* virtio_mmio = &virtio_mmio_manager.virt_mmio_devs[i];
@@ -23,7 +24,7 @@ void virtio_init(vm_t* vm) {
 }
 
 // TODO: enable virtio_mmio config
-void add_virt_mmio() {
+void add_virtio_mmio() {
     virtio_mmio_t virtio_blk = {
         .id = 0,
         .va = VIRTIO_MMIO_ADDRESS,
@@ -43,7 +44,6 @@ bool virtio_mmio_init(virtio_mmio_t* virtio_mmio) {
     virtio_mmio->regs.dev_feature = 0;
     virtio_mmio->regs.drv_feature = 0;
     virtio_mmio->regs.q_num_max = VIRTQUEUE_MAX_SIZE;
-
 
     if(!virt_dev_init(virtio_mmio)) {
         ERROR("virt_device init error!");

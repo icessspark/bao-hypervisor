@@ -129,6 +129,7 @@ struct virtio_mmio {
     
     objcache_t* vq_cache;
     struct virtq* vq;
+
 };
 
 typedef struct virtio_mmio virtio_mmio_t;
@@ -141,7 +142,7 @@ typedef struct virtio_mmio_manager {
 extern virtio_mmio_manager_t virtio_mmio_manager;
 
 void virtio_init(vm_t* vm);
-void add_virt_mmio();
+void add_virtio_mmio();
 bool virtio_mmio_init(virtio_mmio_t* virtio_mmio);
 
 static inline virtio_mmio_t* get_virt_mmio(uint64_t addr) {

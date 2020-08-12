@@ -53,12 +53,12 @@
 			device_type = "cpu";
 			enable-method = "psci";
 		};
-		cpu@1 {
-			reg = <0x0 0x1>;
-			compatible = "arm,cortex-a53";
-			device_type = "cpu";
-			enable-method = "psci";
-		};
+		// cpu@1 {
+		// 	reg = <0x0 0x1>;
+		// 	compatible = "arm,cortex-a53";
+		// 	device_type = "cpu";
+		// 	enable-method = "psci";
+		// };
 
 	};
 
@@ -87,6 +87,6 @@
 		dma-coherent;
 		compatible = "virtio,mmio";
 		interrupts = <0x00 0x10 0x01>;
-		reg = <0x00 0xa000000 0x00 0x200>;
+		reg = <0x00 0xa000000 0x00 0x400>;
 	};
 };
