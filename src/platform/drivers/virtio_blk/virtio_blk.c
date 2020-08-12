@@ -9,19 +9,18 @@
 
 // Note: adapted from
 // https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/virtio_disk.c
+#include <at_utils.h>
 #include <drivers/virtio.h>
 #include <drivers/virtio_blk.h>
 #include <drivers/virtio_mmio.h>
 #include <drivers/virtio_ring.h>
-#include <at_utils.h>
 
-
-#include <mem.h>
 #include <cpu.h>
 #include <interrupts.h>
-#include <vm.h>
+#include <mem.h>
 #include <printf.h>
 #include <string.h>
+#include <vm.h>
 
 #define VIRTIO_MMIO_BASE 0x0a003000
 #define QUEUE_SIZE 8
@@ -111,7 +110,6 @@ void virtio_blk_init()
 
 void virtio_blk_handler()
 {
-    
     // printf("disk.used->ring->id %x\n", disk.used->ring->id);
     // printf("disk.used->idx %x\n", disk.used->idx);
     // printf("status %x\n", status);
@@ -127,8 +125,8 @@ void virtio_blk_handler()
         WARNING("virtio_blk_handler: status != 0");
     }
     writel(1, base + VIRTIO_MMIO_INTERRUPT_ACK);
-    //spin_unlock(&virtio_lock);
-    interrupts_vm_inject(cpu.vcpu->vm, 0x10+32, 0);
+    // spin_unlock(&virtio_lock);
+    interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
 }
 
 void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)
@@ -172,9 +170,9 @@ void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)
 
     writel(0, base + VIRTIO_MMIO_QUEUE_NOTIFY);
     int i = 0;
-    while(readl(base + VIRTIO_MMIO_QUEUE_NOTIFY) != 0) {
+    while (readl(base + VIRTIO_MMIO_QUEUE_NOTIFY) != 0) {
         i++;
-        if( i > 0x100 ) break;
+        if (i > 0x100) break;
     }
 }
 

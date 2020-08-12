@@ -39,19 +39,18 @@ extern uint64_t _config_end, _images_end;
         ".set _" #vm_name "_vm_size,  (_" #vm_name "_vm_end - _" #vm_name \
         "_vm_beg)\n\t");
 
-#define CONFIG_HEADER                              \
-    .fdt_header =                                  \
-        {                                          \
-            .magic = 0xedfe0dd0,                   \
-            .totalsize = 0x28000000,               \
-            .off_dt_struct = 0x28000000,           \
-            .off_dt_strings = 0x28000000,          \
-            .version = 0x11000000,                 \
-            .last_comp_version = 0x2000000,        \
-            .off_mem_rsvmap = 0x28000000,          \
-    },                                             \
-    .config_header_size = CONFIG_HEADER_SIZE, \
-    .config_size = CONFIG_SIZE,
+#define CONFIG_HEADER                       \
+    .fdt_header =                           \
+        {                                   \
+            .magic = 0xedfe0dd0,            \
+            .totalsize = 0x28000000,        \
+            .off_dt_struct = 0x28000000,    \
+            .off_dt_strings = 0x28000000,   \
+            .version = 0x11000000,          \
+            .last_comp_version = 0x2000000, \
+            .off_mem_rsvmap = 0x28000000,   \
+    },                                      \
+    .config_header_size = CONFIG_HEADER_SIZE, .config_size = CONFIG_SIZE,
 
 typedef struct vm_config {
     struct {

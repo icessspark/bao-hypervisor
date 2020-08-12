@@ -1,5 +1,5 @@
-/** 
- * Bao, a Lightweight Static Partitioning Hypervisor 
+/**
+ * Bao, a Lightweight Static Partitioning Hypervisor
  *
  * Copyright (c) Bao Project (www.bao-project.org), 2019-
  *
@@ -11,15 +11,15 @@
  * Bao is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License version 2 as published by the Free
  * Software Foundation, with a special exception exempting guest code from such
- * license. See the COPYING file in the top-level directory for details. 
+ * license. See the COPYING file in the top-level directory for details.
  *
  */
 
 #include <arch/smmuv2.h>
 #include <arch/spinlock.h>
-#include <bitmap.h>
-#include <bit.h>
 #include <arch/sysregs.h>
+#include <bit.h>
+#include <bitmap.h>
 
 #define SME_MAX_NUM 128
 #define CTX_MAX_NUM 128

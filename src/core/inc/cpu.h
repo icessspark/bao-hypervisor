@@ -17,12 +17,12 @@
 #ifndef __CPU_H__
 #define __CPU_H__
 
-#include <bao.h>
 #include <arch/cpu.h>
+#include <bao.h>
 
-#include <spinlock.h>
-#include <mem.h>
 #include <list.h>
+#include <mem.h>
+#include <spinlock.h>
 
 #define STACK_SIZE (PAGE_SIZE)
 
@@ -96,14 +96,16 @@ static inline void cpu_sync_barrier(cpu_synctoken_t* token)
 
     uint64_t next_count = 0;
 
-    while (!token->ready);
+    while (!token->ready)
+        ;
 
     spin_lock(&token->lock);
     token->count++;
     next_count = ALIGN(token->count, token->n);
     spin_unlock(&token->lock);
 
-    while (token->count < next_count);
+    while (token->count < next_count)
+        ;
 }
 
 static inline cpuif_t* cpu_if(uint64_t cpu_id)

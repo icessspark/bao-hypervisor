@@ -16,8 +16,8 @@
 #ifndef __CACHE_H__
 #define __CACHE_H__
 
-#include <bao.h>
 #include <arch/cache.h>
+#include <bao.h>
 
 typedef struct {
     size_t lvls;

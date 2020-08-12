@@ -16,9 +16,9 @@
 #include <arch/vgicv2.h>
 
 #include <bit.h>
-#include <spinlock.h>
 #include <cpu.h>
 #include <interrupts.h>
+#include <spinlock.h>
 #include <vm.h>
 
 #define GICD_IS_REG(REG, offset)            \
@@ -356,9 +356,9 @@ void vgicd_emul_misc_access(emul_access_t *acc)
                         gich.HCR |= GICH_HCR_En_BIT;
                     else
                         gich.HCR &= ~GICH_HCR_En_BIT;
-                    cpu_msg_t msg = {GICV2_IPI_ID, VGICD_GICH_EN,
-                                     VGIC_MSG_DATA(cpu.vcpu->vm->id, 
-                                     0, enable)};
+                    cpu_msg_t msg = {
+                        GICV2_IPI_ID, VGICD_GICH_EN,
+                        VGIC_MSG_DATA(cpu.vcpu->vm->id, 0, enable)};
                     vm_msg_broadcast(cpu.vcpu->vm, &msg);
                 }
             } else {
@@ -553,8 +553,8 @@ void vgicd_emul_pendr_access(emul_access_t *acc, bool set)
         }
     } else {
         for (int i = 0; i < 32; i++) {
-            vgic_int_t* interrupt = vgic_get_int(cpu.vcpu, i + first_int);
-            if(vgic_get_state(interrupt) & PEND){
+            vgic_int_t *interrupt = vgic_get_int(cpu.vcpu, i + first_int);
+            if (vgic_get_state(interrupt) & PEND) {
                 val |= 1 << i;
             }
         }
@@ -574,13 +574,11 @@ inline void vgicd_emul_icpendr_access(emul_access_t *acc)
 
 void vgicd_set_actv(vcpu_t *vcpu, uint64_t int_id, bool act)
 {
-
     vgic_int_t *interrupt = vgic_get_int(cpu.vcpu, int_id & 0x3ff);
 
     spin_lock(&interrupt->lock);
 
     if (vgic_get_ownership(vcpu, interrupt)) {
-
         vgic_remove_lr(vcpu, interrupt);
         uint8_t state = interrupt->state;
         if (act && !(state & ACT)) {
@@ -620,8 +618,8 @@ void vgicd_emul_activer_access(emul_access_t *acc, bool set)
         }
     } else {
         for (int i = 0; i < 32; i++) {
-            vgic_int_t* interrupt = vgic_get_int(cpu.vcpu, i + first_int);
-            if(vgic_get_state(interrupt) & ACT){
+            vgic_int_t *interrupt = vgic_get_int(cpu.vcpu, i + first_int);
+            if (vgic_get_state(interrupt) & ACT) {
                 val |= 1 << i;
             }
         }

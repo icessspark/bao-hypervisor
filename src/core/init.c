@@ -16,13 +16,13 @@
 
 #include <bao.h>
 
-#include <cpu.h>
-#include <mem.h>
-#include <interrupts.h>
 #include <console.h>
+#include <cpu.h>
+#include <drivers/virtio_prelude.h>
+#include <interrupts.h>
+#include <mem.h>
 #include <printk.h>
 #include <vmm.h>
-#include <drivers/virtio_prelude.h>
 
 // FIXME: NET: Registered protocol family 1
 // TODO: log level
@@ -38,7 +38,7 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
      * Specify the config_addr in qemu argument like
      * `-device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000`
      * */
-    
+
     config_addr = 0x49000000;
     cpu_init(cpu_id, load_addr);
     mem_init(load_addr, config_addr);
@@ -56,7 +56,7 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
         INFO("virtio_blk_init ok\n");
     }
     vmm_init();
-
     /* Should never reach here */
-    while (1);
+    while (1)
+        ;
 }

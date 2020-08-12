@@ -16,8 +16,8 @@
 #ifndef __VGICV2_H__
 #define __VGICV2_H__
 
-#include <bao.h>
 #include <arch/gic.h>
+#include <bao.h>
 
 typedef struct vm vm_t;
 typedef struct vcpu vcpu_t;

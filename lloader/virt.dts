@@ -78,7 +78,7 @@
 
 	chosen {
 		stdout-path = "/pl011@9000000";
-		bootargs = "console=ttyAMA0 root=/dev/vda rw noaudit";
+		bootargs = "console=ttyAMA0 root=/dev/vda rw audit=0";
 		linux,initrd-start = <0x40001000>;
 		linux,initrd-end = <0x4010eab1>;
 	};

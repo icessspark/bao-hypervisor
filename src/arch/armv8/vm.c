@@ -13,12 +13,12 @@
  *
  */
 
-#include <vm.h>
-#include <page_table.h>
 #include <arch/sysregs.h>
-#include <fences.h>
 #include <arch/tlb.h>
+#include <fences.h>
+#include <page_table.h>
 #include <string.h>
+#include <vm.h>
 
 void vm_arch_init(vm_t* vm, const vm_config_t* config)
 {

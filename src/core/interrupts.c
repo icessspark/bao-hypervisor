@@ -16,10 +16,10 @@
 
 #include <interrupts.h>
 
-#include <cpu.h>
-#include <vm.h>
 #include <bitmap.h>
+#include <cpu.h>
 #include <string.h>
+#include <vm.h>
 
 BITMAP_ALLOC(hyp_interrupt_bitmap, MAX_INTERRUPTS);
 BITMAP_ALLOC(global_interrupt_bitmap, MAX_INTERRUPTS);
@@ -66,7 +66,6 @@ inline void interrupts_init()
 
         interrupts_reserve(IPI_CPU_MSG, cpu_msg_handler);
         interrupts_reserve(79, virtio_blk_handler);
-
     }
     interrupts_cpu_enable(IPI_CPU_MSG, true);
 }
@@ -83,8 +82,7 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
-    if (int_id != 27 && int_id != 1)
-        INFO("interrupts_handle %d", int_id);
+    if (int_id != 27 && int_id != 1) INFO("interrupts_handle %d", int_id);
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {
         interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
 
@@ -102,7 +100,7 @@ enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 
 void interrupts_vm_assign(vm_t *vm, uint64_t id)
 {
-    if(interrupts_arch_conflict(global_interrupt_bitmap, id)) {
+    if (interrupts_arch_conflict(global_interrupt_bitmap, id)) {
         ERROR("Interrupts conflict, id = %d\n", id);
     }
 

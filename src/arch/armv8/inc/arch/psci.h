@@ -17,10 +17,10 @@
 #ifndef __PSCI_H__
 #define __PSCI_H__
 
-#include <bao.h>
-#include <spinlock.h>
-#include <plat/psci.h>
 #include <arch/gic.h>
+#include <bao.h>
+#include <plat/psci.h>
+#include <spinlock.h>
 
 #define PSCI_VERSION (0x84000000)
 #define PSCI_CPU_SUSPEND_AARCH32 (0x84000001)

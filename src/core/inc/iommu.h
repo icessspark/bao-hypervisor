@@ -16,10 +16,10 @@
 #ifndef __IOMMU_H__
 #define __IOMMU_H__
 
-#include <bao.h>
 #include <arch/iommu.h>
-#include <objcache.h>
+#include <bao.h>
 #include <list.h>
+#include <objcache.h>
 
 typedef struct vm_config vm_config_t;
 typedef struct vm vm_t;

@@ -17,11 +17,11 @@
 #include <bao.h>
 #include <interrupts.h>
 
-#include <cpu.h>
-#include <platform.h>
 #include <arch/gic.h>
-#include <mem.h>
 #include <arch/sysregs.h>
+#include <cpu.h>
+#include <mem.h>
+#include <platform.h>
 #include <vm.h>
 
 void interrupts_arch_init()

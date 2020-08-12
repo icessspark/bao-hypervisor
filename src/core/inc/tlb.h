@@ -16,8 +16,8 @@
 #ifndef __TLB_H__
 #define __TLB_H__
 
-#include <bao.h>
 #include <arch/tlb.h>
+#include <bao.h>
 
 #include <mem.h>
 

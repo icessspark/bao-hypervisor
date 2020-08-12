@@ -9,10 +9,11 @@
 
 int printf(const char *fmt, ...);
 
-#define panic(_) \
-    do { \
+#define panic(_)   \
+    do {           \
         printf(_); \
-        while (1); \
+        while (1)  \
+            ;      \
     } while (0)
 
 #endif  // BAO_PRINTF_H

@@ -14,8 +14,8 @@
  */
 
 #include <cpu.h>
-#include <vm.h>
 #include <platform.h>
+#include <vm.h>
 
 #define DEFINE_OFFSET(SYMBOL, STRUCT, FIELD) \
     asm volatile("\n-> " #SYMBOL " %0 \n" : : "i"(offsetof(STRUCT, FIELD)))

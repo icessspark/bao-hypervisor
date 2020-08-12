@@ -17,20 +17,19 @@
 #ifndef __VM_H__
 #define __VM_H__
 
-#include <bao.h>
 #include <arch/vm.h>
+#include <bao.h>
 
-#include <platform.h>
-#include <mem.h>
-#include <cpu.h>
-#include <spinlock.h>
-#include <config.h>
-#include <emul.h>
-#include <objcache.h>
-#include <interrupts.h>
 #include <bitmap.h>
+#include <config.h>
+#include <cpu.h>
+#include <emul.h>
+#include <interrupts.h>
 #include <iommu.h>
-
+#include <mem.h>
+#include <objcache.h>
+#include <platform.h>
+#include <spinlock.h>
 
 typedef struct vm {
     uint64_t id;

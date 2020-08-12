@@ -16,9 +16,9 @@
 
 #include <arch/gic.h>
 #include <bit.h>
-#include <spinlock.h>
 #include <cpu.h>
 #include <interrupts.h>
+#include <spinlock.h>
 #include <vm.h>
 
 volatile gicd_t gicd __attribute__((section(".devices"), aligned(PAGE_SIZE)));
@@ -181,15 +181,14 @@ uint64_t gicd_get_prio(uint64_t int_id)
 }
 
 void gicd_set_icfgr(uint64_t int_id, uint8_t cfg)
-{   
+{
     spin_lock(&gicd_lock);
 
-    uint64_t reg_ind = (int_id*GIC_CONFIG_BITS)/(sizeof(uint32_t)*8);
-    uint64_t off = (int_id*GIC_CONFIG_BITS)%(sizeof(uint32_t)*8);
+    uint64_t reg_ind = (int_id * GIC_CONFIG_BITS) / (sizeof(uint32_t) * 8);
+    uint64_t off = (int_id * GIC_CONFIG_BITS) % (sizeof(uint32_t) * 8);
     uint64_t mask = ((1U << GIC_CONFIG_BITS) - 1) << off;
 
-    gicd.ICFGR[reg_ind] = 
-        (gicd.ICFGR[reg_ind] & ~mask) | ((cfg << off) & mask);
+    gicd.ICFGR[reg_ind] = (gicd.ICFGR[reg_ind] & ~mask) | ((cfg << off) & mask);
 
     spin_unlock(&gicd_lock);
 }

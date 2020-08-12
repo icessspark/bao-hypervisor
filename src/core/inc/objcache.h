@@ -17,8 +17,8 @@
 #define __OBJCACHE_H__
 
 #include <bao.h>
-#include <mem.h>
 #include <list.h>
+#include <mem.h>
 #include <spinlock.h>
 
 #define SLAB_SIZE PAGE_SIZE
