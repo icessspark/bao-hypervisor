@@ -3,6 +3,7 @@
 #include <at_utils.h>
 #include <drivers/virtio_prelude.h>
 
+#define DEBUG_ON 1
 
 extern spinlock_t req_handler_lock;
 
@@ -104,7 +105,7 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
     virtio_mmio_t* virtio_mmio = get_virt_mmio(addr);
 
     spin_lock(&req_handler_lock);
-    
+
     INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to host" : "read from host");
 
     if(addr < VIRTIO_MMIO_ADDRESS) {
@@ -123,18 +124,18 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 break;
             case VIRTIO_MMIO_VERSION:
                 value = virtio_mmio->regs.version;
-                printk("read VIRTIO_MMIO_VERSION 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_VERSION 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_DEVICE_ID:
                 value = virtio_mmio->regs.device_id;
-                printk("read VIRTIO_MMIO_DEVICE_ID 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_DEVICE_ID 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_VENDOR_ID:
                 value = virtio_mmio->regs.vendor_id;
                 break;
             case VIRTIO_MMIO_STATUS:
                 value = virtio_mmio->regs.dev_stat;
-                printk("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_HOST_FEATURES:
                 if(virtio_mmio->regs.dev_feature_sel)
@@ -142,28 +143,28 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 else
                     virtio_mmio->regs.dev_feature = u64_low_to_u32(virtio_mmio->dev->features);
                 value = virtio_mmio->regs.dev_feature;
-                printk("read VIRTIO_MMIO_HOST_FEATURES 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_HOST_FEATURES 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NUM_MAX:
                 value = virtio_mmio->regs.q_num_max;
-                printk("read VIRTIO_MMIO_QUEUE_NUM_MAX 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_QUEUE_NUM_MAX 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_READY:
                 value = virtio_mmio->regs.q_ready;
-                printk("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_INTERRUPT_STATUS:
                 // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS
                 value = 1;
-                printk("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_CONFIG_GENERATION:
                 value = virtio_mmio->dev->generation;
-                printk("read VIRTIO_MMIO_CONFIG_GENERATION 0x%x\n\r", value);
+                DEBUG("read VIRTIO_MMIO_CONFIG_GENERATION 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_CONFIG ... VIRTIO_MMIO_REGS_END:
                 value = *(uint64_t*)(virtio_mmio->dev->desc + offset - VIRTIO_MMIO_CONFIG);
-                printk("read VIRTIO_MMIO_CONFIG, offset 0x%x, value 0x%x\n\r", offset, value);
+                DEBUG("read VIRTIO_MMIO_CONFIG, offset 0x%x, value 0x%x\n\r", offset, value);
                 break;
             default:
                 ERROR("virtio_emul_handler wrong reg_read, address=0x%x", addr);
@@ -177,22 +178,22 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
         {
             case VIRTIO_MMIO_STATUS:
                 virtio_mmio->regs.dev_stat = value;
-                printk("write device_state 0x%x\n\r", value);
+                DEBUG("write device_state 0x%x\n\r", value);
                 if(virtio_mmio->regs.dev_stat == 0) {
                     virt_dev_reset(virtio_mmio);
                 }
                 break;
             case VIRTIO_MMIO_HOST_FEATURES_SEL:
                 virtio_mmio->regs.dev_feature_sel = value;
-                printk("write dev_feature_sel 0x%x\n\r", value);
+                DEBUG("write dev_feature_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_GUEST_FEATURES_SEL:
                 virtio_mmio->regs.drv_feature_sel = value;
-                printk("write drv_feature_sel 0x%x\n\r", value);
+                DEBUG("write drv_feature_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_GUEST_FEATURES:
                 virtio_mmio->regs.drv_feature = value;
-                printk("write VIRTIO_MMIO_GUEST_FEATURES 0x%x!\n\r", value);
+                DEBUG("write VIRTIO_MMIO_GUEST_FEATURES 0x%x!\n\r", value);
                 if(virtio_mmio->regs.drv_feature_sel)
                     virtio_mmio->driver_features |= u32_to_u64_high(virtio_mmio->regs.drv_feature);
                 else
@@ -200,48 +201,48 @@ bool virtio_be_blk_handler(emul_access_t *acc) {
                 break;
             case VIRTIO_MMIO_QUEUE_SEL:
                 virtio_mmio->regs.q_sel = value;
-                printk("write q_sel 0x%x\n\r", value);
+                DEBUG("write q_sel 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NUM:
                 virtio_mmio->vq->num = value;
-                printk("write q_num 0x%x\n\r", value);
+                DEBUG("write q_num 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NOTIFY:
                 virtio_mmio->regs.q_notify = value;
-                printk("write q_notify 0x%x\n\r", value);
+                DEBUG("write q_notify 0x%x\n\r", value);
                 virtio_mmio->vq->notify_handler(virtio_mmio->vq, virtio_mmio);
                 break;
             case VIRTIO_MMIO_INTERRUPT_ACK:
                 virtio_mmio->regs.irt_ack = value;
-                printk("write irt_ack 0x%x\n\r", value);
+                DEBUG("write irt_ack 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_LOW:
                 virtio_mmio->regs.q_desc_l = value;
-                printk("write q_desc_l 0x%x\n\r", value);
+                DEBUG("write q_desc_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_HIGH:
                 virtio_mmio->regs.q_desc_h = value;
-                printk("write q_desc_h 0x%x\n\r", value);
+                DEBUG("write q_desc_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_AVAIL_LOW:
                 virtio_mmio->regs.q_drv_l = value;
-                printk("write q_drv_l 0x%x\n\r", value);
+                DEBUG("write q_drv_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_AVAIL_HIGH:
                 virtio_mmio->regs.q_drv_h = value;
-                printk("write q_drv_h 0x%x\n\r", value);
+                DEBUG("write q_drv_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_USED_LOW:
                 virtio_mmio->regs.q_dev_l = value;
-                printk("write q_dev_l 0x%x\n\r", value);
+                DEBUG("write q_dev_l 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_USED_HIGH:
                 virtio_mmio->regs.q_dev_h = value;
-                printk("write q_dev_h 0x%x\n\r", value);
+                DEBUG("write q_dev_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_READY:
                 virtio_mmio->regs.q_ready = value;
-                printk("write q_ready 0x%x\n\r", value);
+                DEBUG("write q_ready 0x%x\n\r", value);
                 break;
             default:
                 ERROR("virtio_emul_handler wrong reg write 0x%x", addr);

@@ -1,6 +1,8 @@
 #include <virtq.h>
 #include <at_utils.h>
 
+#define DEBUG_ON 1
+
 static inline int next_desc(struct vring_desc *desc)
 {
 	return (!(desc->flags & VIRTQ_DESC_F_NEXT)) ? -1 : desc->next;
@@ -12,18 +14,15 @@ uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num) {
     vq->avail = avail;
     uint16_t avail_desc_idx = 0;
 
-    // printk("avail_ipa 0x%x%x\n", u64_high_to_u32(avail_addr), u64_low_to_u32(avail_addr));
-    // printk("avail_pa 0x%x%x\n", u64_high_to_u32(ipa2pa(avail_addr)), u64_low_to_u32(ipa2pa(avail_addr)));
-    // printk("avail_el2_va 0x%x%x\n", u64_high_to_u32((uint64_t)avail), u64_low_to_u32((uint64_t)avail));
-    printk("[*avail_ring*]\n");
+    DEBUG("[*avail_ring*]\n");
 
-    printk("avail_flags 0x%x idx 0x%x ring_addr 0x%x%x\n", vq->avail->flags, vq->avail->idx, 
-        u64_high_to_u32(vq->avail->ring), u64_low_to_u32(vq->avail->ring));
+    DEBUG("avail_flags 0x%x idx 0x%x ring_addr 0x%lx\n", vq->avail->flags, vq->avail->idx, 
+        vq->avail->ring);
     
-    printf("last_avail_idx %d cur_avail_idx %d\n", vq->last_avail_idx, vq->avail->idx);
+    DEBUG("last_avail_idx %d cur_avail_idx %d\n", vq->last_avail_idx, vq->avail->idx);
     
     if(vq->avail->idx <= vq->last_avail_idx) {
-        ERROR("available idx is not changed\n");
+        WARNING("available idx is not changed\n");
         return num+1;
     }
 
@@ -37,10 +36,10 @@ uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num) {
 
     for(int i=0; i<num; i++) {
         if(i == (vq->avail->idx-1) % num) {
-            printk("* ");
+            DEBUG("* ");
             avail_desc_idx = vq->avail->ring[i];
         }
-        printk("index %d 0x%x\n", i, vq->avail->ring[i]);
+        DEBUG("index %d 0x%x\n", i, vq->avail->ring[i]);
     }
 
     return avail_desc_idx;
@@ -55,17 +54,14 @@ void process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m) {
 
     uint16_t avail_desc_idx = get_avail_desc(vq, avail_addr, num);
     if(avail_desc_idx >=num) {
-        ERROR("unable to get desc_chain\n");
+        WARNING("unable to get desc_chain\n");
         return;
     }
     uint16_t desc_chain_head_idx = avail_desc_idx;
 
-    // printk("desc_root_ipa 0x%x%x\n", u64_high_to_u32(desc_root_addr), u64_low_to_u32(desc_root_addr));
-    // printk("desc_root_el2_pa 0x%x%x\n", u64_high_to_u32(ipa2pa(desc_root_addr)), u64_low_to_u32(ipa2pa(desc_root_addr)));
-
     struct vring_desc* desc_root = ipa2va(&cpu.as, desc_root_addr, 2, SEC_HYP_PRIVATE); 
 
-    printk("[*desc_ring*]\n");
+    DEBUG("[*desc_ring*]\n");
 
     // header
     int header_idx = avail_desc_idx; // for print
@@ -109,27 +105,27 @@ void process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m) {
 
     for(int i = 0; i < num; i++) {
         if(i == header_idx) {
-            printk("[header] ");
+            DEBUG("[header] ");
         } 
         else if(i == data_idx) {
-            printk("[data] ");
+            DEBUG("[data] ");
         }
         else if(i == status_idx) {
-            printk("[status] ");
+            DEBUG("[status] ");
         }
-        printk("index %d desc_addr 0x%x%x len 0x%x flags 0x%x next 0x%x\n", i, 
-            u64_high_to_u32(desc_root[i].addr), u64_low_to_u32(desc_root[i].addr), 
+        DEBUG("index %d desc_addr 0x%lx len 0x%x flags 0x%x next 0x%x\n", i, 
+            desc_root[i].addr, 
             desc_root[i].len, 
             desc_root[i].flags, 
             desc_root[i].next);
         if(i == header_idx) {
-            printk("    req_type 0x%x req_sector 0x%x%x\n", req->type, u64_high_to_u32(req->sector), u64_low_to_u32(req->sector));
+            DEBUG("    req_type 0x%x req_sector 0x%lx\n", req->type, req->sector);
         }
         else if(i == data_idx) {
-            printk("    req_write_addr 0x%x%x req_write_len 0x%x\n", u64_high_to_u32(req->data_bg), u64_low_to_u32(req->data_bg), req->len);
+            DEBUG("    req_write_addr 0x%lx req_write_len 0x%x\n", req->data_bg, req->len);
         }
         else if(i == status_idx) {
-            printk("    req_status_addr 0x%x%x\n", u64_high_to_u32(req->status_addr), u64_low_to_u32(req->status_addr));
+            DEBUG("    req_status_addr 0x%lx\n", req->status_addr);
         }
     }
 
@@ -139,27 +135,23 @@ void process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m) {
     vq->used = used;
     vq->used->flags = 0;
 
-    // struct vring_used_elem *used_ring = (void*)vq->used + 4;
-    // used_ring += (vq->used->idx) % num;
-    // used_ring->id = desc_chain_head_idx;
-    // used_ring->len = req->len;
-    // // FIXME: real write len
+    // FIXME: real write len
     vq->used->ring[vq->used->idx % num].id = desc_chain_head_idx;
     vq->used->ring[vq->used->idx % num].len = req->len;
     
-    printk("[*used_ring*]\n");
+    DEBUG("[*used_ring*]\n");
 
     for(int i = 0; i < num; i++) {
         if(i == vq->used->idx % num)
-            printk("* ");
-        printk("index %d id 0x%x len 0x%x\n", i, vq->used->ring[i].id, vq->used->ring[i].len);
+            DEBUG("* ");
+        DEBUG("index %d id 0x%x len 0x%x\n", i, vq->used->ring[i].id, vq->used->ring[i].len);
     }
 
     // asm("dsb sy");
     vq->last_used_idx = vq->used->idx;
     vq->used->idx ++;
     
-    printf("cur_used_idx %d next_used_idx %d\n", vq->last_used_idx, vq->used->idx);
+    DEBUG("cur_used_idx %d next_used_idx %d\n", vq->last_used_idx, vq->used->idx);
 
     // handle request
 

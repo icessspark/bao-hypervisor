@@ -195,10 +195,10 @@ bool console_emul_handler(emul_access_t *acc) {
     }
     if (acc->addr == 0x09000000 && acc->write) {
         char c = vcpu_readreg(cpu.vcpu, acc->reg) & 0xff;
-        printk("%c", c);
+        DEBUG("%c", c);
         return true;
     }
-    printk("console_emul_handler addr %x width %d %c\n", acc->addr, acc->width, acc->write ? 'W' : 'R');
+    DEBUG("console_emul_handler addr %x width %d %c\n", acc->addr, acc->width, acc->write ? 'W' : 'R');
     if (!acc->write) {
         vcpu_writereg(cpu.vcpu, acc->reg, 0);
     }

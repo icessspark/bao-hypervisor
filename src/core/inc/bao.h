@@ -25,27 +25,36 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <printk.h>
+#include <printf.h>
 #include <util.h>
+
+#define DEBUG_ON 1
 
 #define INFO(args...)              \
     {                              \
-        printk("BAO INFO: " args); \
-        printk("\n");              \
+        printf("INFO: " args);     \
+        printf("\n");              \
     }
 
 #define WARNING(args...)              \
     {                                 \
-        printk("BAO WARNING: " args); \
-        printk("\n");                 \
+        printf("WARNING: " args);     \
+        printf("\n");                 \
     }
 
 #define ERROR(args...)              \
     {                               \
-        printk("BAO ERROR: " args); \
-        printk("\n");               \
+        printf("ERROR: " args);     \
+        printf("\n");               \
         while (1);                  \
     }
+
+#define DEBUG(args...)                  \
+    {                                   \
+        if(DEBUG_ON) {                  \
+            printf("DEBUG: " args);     \
+        }                               \
+    }                                   
 
 #endif /* __ASSEMBLER__ */
 
