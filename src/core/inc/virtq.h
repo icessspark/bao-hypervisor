@@ -39,9 +39,9 @@ struct virtq {
     int ready;
 	unsigned int num;
 	unsigned int iovec_size;
-	struct vring_desc *desc;
-	struct vring_avail *avail;
-	struct vring_used *used;
+	struct vring_desc volatile *desc;
+	struct vring_avail volatile *avail;
+	struct vring_used volatile *used;
 	uint16_t last_avail_idx;
 	uint16_t avail_idx;
 	uint16_t last_used_idx;
