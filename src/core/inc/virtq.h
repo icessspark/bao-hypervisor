@@ -48,7 +48,7 @@ struct virtq {
     // uint16_t used_flags;
     uint16_t vq_index;
 
-    void (*notify_handler)(struct virtq *, struct virtio_mmio *);
+    bool (*notify_handler)(struct virtq *, struct virtio_mmio *);
 };
 
 typedef struct virtq virtq_t;
@@ -114,31 +114,12 @@ static inline uint32_t vring_size(unsigned int qsz)
            ALIGN(sizeof(struct vring_used_elem) * qsz, VRING_ALIGN_SIZE);
 }
 
-// static int inline virtq_has_feature(virtq_t *vq, uint32_t fe)
-// {
-// 	return !!(vq->dev->master->driver_features & (1UL << fe));
-// }
-
-// static inline void virtio_send_irq(virt_dev_t *dev, int type)
-// {
-// 	uint32_t value = 0;
-
-// 	value = dev->master->regs.irt_stat;
-// 	// rmb();
-
-// 	value |= type;
-//     dev->master->regs.irt_stat = value;
-// 	// wmb();
-
-// 	// vdev_send_irq(dev->vdev);
-// }
-
 int virtq_notify(virtq_t *virtq);
 int virtq_disable_notify(virtq_t *virtq);
 int virtq_enable_notify(virtq_t *virtq);
 
 void virtq_init(virtq_t *virtq);
 
-void process_guest_blk_notify(virtq_t *, virtio_mmio_t *);
+bool process_guest_blk_notify(virtq_t *, virtio_mmio_t *);
 
 #endif /* __VIRT_DEV_H__ */

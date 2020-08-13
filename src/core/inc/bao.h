@@ -28,7 +28,6 @@
 #include <printf.h>
 #include <util.h>
 
-#define DEBUG_ON 1
 
 #define INFO(args...)          \
     {                          \
@@ -50,12 +49,6 @@
             ;                   \
     }
 
-#define DEBUG(args...)              \
-    {                               \
-        if (DEBUG_ON) {             \
-            printf("DEBUG: " args); \
-        }                           \
-    }
 
 #endif /* __ASSEMBLER__ */
 

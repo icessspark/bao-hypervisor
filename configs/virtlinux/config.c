@@ -34,7 +34,7 @@ struct config config =
 
                     .entry = 0x40000000,
                     .cpu_affinity = 0b0001,
-                    .platform = {.cpu_num = 1,
+                    .platform = {.cpu_num = 2,
 
                                  .region_num = 1,
                                  .regions =

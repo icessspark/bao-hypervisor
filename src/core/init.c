@@ -25,7 +25,7 @@
 #include <vmm.h>
 
 // FIXME: NET: Registered protocol family 1
-// TODO: log level
+// TODO: uboot
 
 void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
 {
@@ -47,13 +47,13 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
 
     if (cpu.id == CPU_MASTER) {
         console_init();
-        INFO("Bao Hypervisor\n\r");
+        INFO("Bao Hypervisor");
     }
     interrupts_init();
 
     if (cpu.id == CPU_MASTER) {
         virtio_blk_init();
-        INFO("virtio_blk_init ok\n");
+        INFO("virtio_blk_init ok");
     }
     vmm_init();
     /* Should never reach here */

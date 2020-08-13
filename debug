@@ -10,7 +10,7 @@ qemu-system-aarch64 -cpu cortex-a53 \
 -kernel bin/qemu/aarch64-virt/bao.bin \
 -m 4g \
 -device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000 \
--drive id=test,file=/home/icespark/project/c_cpp/hypervisor/img/arch.img,format=raw,if=none \
+-drive id=test,file=/home/icespark/project/c_cpp/hypervisor/img/ubuntu.img,format=raw,if=none \
 -device virtio-blk-device,drive=test \
 -serial stdio \
 -serial tcp:127.0.0.1:12345,server,nowait \

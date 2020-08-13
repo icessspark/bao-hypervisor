@@ -1,6 +1,10 @@
 #include <bao.h>
 #include <virtio_mmio.h>
 
+// TODO support smp
+// TODO support multi_vm
+// TODO remove size_max and seg_max restriction
+
 virtio_mmio_manager_t virtio_mmio_manager = {.num = 0};
 spinlock_t req_handler_lock = SPINLOCK_INITVAL;
 

@@ -45,6 +45,7 @@ static inline uint64_t ipa2pa(uint64_t ipa)
     }
 }
 
+// FIXME: memory leak?
 static inline void* ipa2va(uint64_t ipa)
 {
     uint64_t pa = ipa2pa(ipa);

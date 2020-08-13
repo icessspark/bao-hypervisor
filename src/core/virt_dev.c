@@ -108,12 +108,17 @@ void virt_dev_reset(virtio_mmio_t* v_m)
     v_m->regs.q_ready = 0;
 }
 
+// int lock_count = 0;
+// int unlock_count = 0;
+
 // TODO: reconsider the implement location
 bool virtio_be_blk_handler(emul_access_t* acc)
 {
     uint64_t addr = acc->addr;
 
     virtio_mmio_t* virtio_mmio = get_virt_mmio(addr);
+
+    // printk("enter req_handler_lock(%d)!\n", lock_count++);
 
     spin_lock(&req_handler_lock);
 
@@ -174,7 +179,7 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                 break;
             case VIRTIO_MMIO_INTERRUPT_STATUS:
                 // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS
-                value = 1;
+                value = virtio_mmio->regs.irt_stat;
                 //                printk("read VIRTIO_MMIO_INTERRUPT_STATUS
                 //                0x%x\n\r", value);
                 break;
@@ -186,8 +191,9 @@ bool virtio_be_blk_handler(emul_access_t* acc)
             case VIRTIO_MMIO_CONFIG ... VIRTIO_MMIO_REGS_END:
                 value = *(uint64_t*)(virtio_mmio->dev->desc + offset -
                                      VIRTIO_MMIO_CONFIG);
-                DEBUG("read VIRTIO_MMIO_CONFIG, offset 0x%x, value 0x%x\n\r",
-                      offset, value);
+                // printk("read VIRTIO_MMIO_CONFIG, offset 0x%x, value
+                // 0x%x\n\r",
+                //       offset, value);
                 break;
             default:
                 ERROR("virtio_emul_handler wrong reg_read, address=0x%x", addr);
@@ -235,13 +241,17 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                 //                printk("write q_num 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_NOTIFY:
-                virtio_mmio->regs.q_notify = value;
                 //                printk("write q_notify 0x%x\n\r", value);
-                virtio_mmio->vq->notify_handler(virtio_mmio->vq, virtio_mmio);
+                virtio_mmio->regs.q_notify = value;
+                virtio_mmio->regs.irt_stat = 1;
+                if (!virtio_mmio->vq->notify_handler(virtio_mmio->vq,
+                                                     virtio_mmio)) {
+                    // interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+                }
                 break;
             case VIRTIO_MMIO_INTERRUPT_ACK:
                 virtio_mmio->regs.irt_ack = value;
-                //                printk("write irt_ack 0x%x\n\r", value);
+                // printk("write irt_ack 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_DESC_LOW:
                 virtio_mmio->regs.q_desc_l = value;
@@ -279,6 +289,8 @@ bool virtio_be_blk_handler(emul_access_t* acc)
 
     spin_unlock(&req_handler_lock);
 
+    // printk("exit req_handler_lock(%d)!\n", unlock_count++);
+
     return true;
 }
 
@@ -292,13 +304,13 @@ void blk_req_handler(void* req, void* buffer)
     uint32_t len = blk_req->len;
 
     if (blk_req->type == 0) {
-        printf("[R]:  sector %08lx, len %04x\n", sector, len);
+        printf("[R]: sector %08lx, len %04x\n", sector, len);
         virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
     } else if (blk_req->type == 1) {
         printf("[W]: sector %08lx, len %04x\n", sector, len);
         virtio_blk_write(sector, len / SECTOR_BSIZE, buffer);
     } else {
-        printf("type %d ", blk_req->type);
+        WARNING("Wrong block request type %d ", blk_req->type);
         // panic("blk_req->type!");
     }
 }

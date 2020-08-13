@@ -112,7 +112,7 @@ struct virtio_blk_req {
     uint64_t sector;
     uint64_t data_bg;
     uint32_t len;
-    uint64_t status_addr;
+    uint64_t* status;
 };
 
 bool virt_dev_init(virtio_mmio_t* virtio_mmio);
