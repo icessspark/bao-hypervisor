@@ -83,7 +83,7 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio)
 // TODO: complete blk cfg
 void blk_cfg_init(blk_desc_t* blk_cfg)
 {
-    blk_cfg->capacity = 5120000;
+    blk_cfg->capacity = 2000 * 1024 * 1024 / 512;
     blk_cfg->size_max = 0x1000; /* not negotiated */
     blk_cfg->seg_max = BLOCKIF_IOV_MAX;
     blk_cfg->geometry.cylinders = 0; /* no geometry */

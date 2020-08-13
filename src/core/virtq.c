@@ -92,34 +92,48 @@ static uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num)
     // printk("avail_flags 0x%x idx 0x%x ring_addr 0x%x%x\n", vq->avail->flags,
     //        vq->avail->idx, u64_high_to_u32(vq->avail->ring),
     //        u64_low_to_u32(vq->avail->ring));
+    // ISB();
 
-    printk("[*avail_ring*]\n");
-    printf("last_avail_idx %d cur_avail_idx %d\n", vq->last_avail_idx,
-           vq->avail->idx);
+    // printf("[*avail_ring*]\nlast_avail_idx %d cur_avail_idx %d\n",
+    //        vq->last_avail_idx, vq->avail->idx);
+
+    // virtq_disable_notify(vq);
 
     if (vq->avail->flags != 0) {
         WARNING("vq->avail->flags != 0");
     }
-    if (vq->avail->idx <= vq->last_avail_idx) {
-        WARNING("available idx is not changed!");
-        return num + 1;
+
+    if (!virtq_has_descs(vq)) {
+        // INFO("last_avail_idx >= cur_idx!");
+        return num;
     }
 
-    vq->last_avail_idx = vq->avail->idx;
+    // virtq_enable_notify(vq);
 
     if (vq->avail->idx == 0) {
+        WARNING("cur_avail_idx == 0 !");
         avail_desc_idx = vq->avail->ring[num - 1];
-        vq->last_avail_idx = vq->avail->idx;
+        vq->last_avail_idx++;
         return avail_desc_idx;
     }
 
     for (int i = 0; i < num; i++) {
-        if (i == (vq->avail->idx - 1) % num) {
+        if (i == (vq->last_avail_idx) % num) {
             avail_desc_idx = vq->avail->ring[i];
+            break;
         }
     }
 
+    vq->last_avail_idx++;
+
     return avail_desc_idx;
+}
+
+static inline void update_used_flags(virtq_t *vq, uint64_t used_addr)
+{
+    vq->used = ipa2va(used_addr);
+    vq->used->flags = vq->used_flags;
+    // printk("update_used_flags %d\n", vq->used->flags);
 }
 
 static void update_used_ring(virtq_t *vq, struct virtio_blk_req *req,
@@ -127,8 +141,7 @@ static void update_used_ring(virtq_t *vq, struct virtio_blk_req *req,
                              uint32_t num)
 {
     // update used ring
-    vq->used = ipa2va(used_addr);
-    vq->used->flags = 0;
+    update_used_flags(vq, used_addr);
 
     // FIXME: real write len
     vq->used->ring[vq->used->idx % num].id = desc_chain_head_idx;
@@ -201,41 +214,45 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
     uint64_t used_addr =
         u32_to_u64_high(v_m->regs.q_dev_h) | u32_to_u64_low(v_m->regs.q_dev_l);
 
-    uint32_t num = vq->num;
-
-    uint16_t avail_desc_idx = get_avail_desc(vq, avail_addr, num);
-    if (avail_desc_idx >= num) {
-        WARNING("Unable to get desc_chain!");
-        return false;
-    }
-
-    show_avail_info(vq, num);
-
-    uint16_t desc_chain_head_idx = avail_desc_idx;
-    struct virtio_blk_req *req = v_m->dev->req;
-
     struct vring_desc *desc_table = ipa2va(desc_table_addr);
-    uint16_t desc_next = 0;
-    desc_next = get_virt_desc_header(vq, req, avail_desc_idx, desc_table);
-    desc_next = get_virt_desc_data(vq, req, desc_next, desc_table);
-    update_virt_desc_status(vq, req, desc_next, desc_table, VIRTIO_BLK_S_OK);
+    struct virtio_blk_req *req = v_m->dev->req;
+    uint32_t num = vq->num;
+    uint16_t avail_desc_idx = 0;
+    uint16_t desc_chain_head_idx = 0;
 
-    show_desc_info(req, desc_table, num);
+    while ((avail_desc_idx = get_avail_desc(vq, avail_addr, num)) >= 0) {
+        if (avail_desc_idx == num) {
+            // WARNING("Unable to get desc_chain!");
+            break;
+        }
 
-    update_used_ring(vq, req, used_addr, desc_chain_head_idx, num);
+        // printk("avail_desc_idx %d\n", avail_desc_idx);
+        // show_avail_info(vq, num);
 
-    show_used_info(vq, num);
-
-    // handle request
-    void *buf = ipa2va(req->data_bg);
-    // FIXME: decide on how to realize handler
-    if (req->type > 1) {
+        desc_chain_head_idx = avail_desc_idx;
+        uint16_t desc_next = 0;
+        // TODO: Check next_desc
+        desc_next = get_virt_desc_header(vq, req, avail_desc_idx, desc_table);
+        desc_next = get_virt_desc_data(vq, req, desc_next, desc_table);
         update_virt_desc_status(vq, req, desc_next, desc_table,
-                                VIRTIO_BLK_S_UNSUPP);
-        interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+                                VIRTIO_BLK_S_OK);
+        // show_desc_info(req, desc_table, num);
+
+        update_used_ring(vq, req, used_addr, desc_chain_head_idx, num);
+        // show_used_info(vq, num);
+
+        // handle request
+        void *buf = ipa2va(req->data_bg);
+        // FIXME: decide on how to realize handler
+        if (req->type > 1) {
+            update_virt_desc_status(vq, req, desc_next, desc_table,
+                                    VIRTIO_BLK_S_UNSUPP);
+            interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+        }
+
+        blk_req_handler(req, buf);
+        // v_m->dev->handler(req, buf);
     }
-    blk_req_handler(req, buf);
-    // v_m->dev->handler(req, buf);
 
     return true;
 }

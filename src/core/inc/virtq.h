@@ -7,6 +7,7 @@
 #include <util.h>
 #include <virt_dev.h>
 #include <virtio_mmio.h>
+#include <arch/fences.h>
 
 typedef struct virtio_mmio virtio_mmio_t;
 
@@ -45,7 +46,7 @@ struct virtq {
     uint16_t last_avail_idx;
     uint16_t avail_idx;
     uint16_t last_used_idx;
-    // uint16_t used_flags;
+    uint16_t used_flags;
     uint16_t vq_index;
 
     bool (*notify_handler)(struct virtq *, struct virtio_mmio *);
@@ -114,11 +115,23 @@ static inline uint32_t vring_size(unsigned int qsz)
            ALIGN(sizeof(struct vring_used_elem) * qsz, VRING_ALIGN_SIZE);
 }
 
-int virtq_notify(virtq_t *virtq);
-int virtq_disable_notify(virtq_t *virtq);
-int virtq_enable_notify(virtq_t *virtq);
+int virtq_notify(virtq_t *vq);
 
-void virtq_init(virtq_t *virtq);
+int inline virtq_disable_notify(virtq_t *vq) {
+    if (vq->used_flags & VRING_USED_F_NO_NOTIFY) return 0;
+    vq->used_flags |= VRING_USED_F_NO_NOTIFY;
+
+    fence_sync_write();
+}
+int inline virtq_enable_notify(virtq_t *vq)
+{
+    if (!(vq->used_flags & VRING_USED_F_NO_NOTIFY)) return 0;
+    vq->used_flags &= ~VRING_USED_F_NO_NOTIFY;
+
+    fence_sync_write();
+};
+
+void virtq_init(virtq_t *vq);
 
 bool process_guest_blk_notify(virtq_t *, virtio_mmio_t *);
 
