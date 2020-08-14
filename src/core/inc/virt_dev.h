@@ -75,38 +75,6 @@ struct virt_dev {
 
 typedef struct virt_dev virt_dev_t;
 
-typedef struct blk_desc {
-    uint64_t capacity;
-    uint32_t size_max;
-    uint32_t seg_max;
-    struct virtio_blk_geometry {
-        uint16_t cylinders;
-        uint8_t heads;
-        uint8_t sectors;
-    } geometry;
-    uint32_t blk_size;
-    struct virtio_blk_topology {
-        // # of logical blocks per physical block (log2)
-        uint8_t physical_block_exp;
-        // offset of first aligned logical block
-        uint8_t alignment_offset;
-        // suggested minimum I/O size in blocks
-        uint16_t min_io_size;
-        // optimal (suggested maximum) I/O size in blocks
-        uint32_t opt_io_size;
-    } topology;
-    uint8_t writeback;
-    uint8_t unused0[3];
-    uint32_t max_discard_sectors;
-    uint32_t max_discard_seg;
-    uint32_t discard_sector_alignment;
-    uint32_t max_write_zeroes_sectors;
-    uint32_t max_write_zeroes_seg;
-    uint8_t write_zeroes_may_unmap;
-    uint8_t unused1[3];
-
-} __attribute__((packed)) blk_desc_t;
-
 struct virtio_blk_req {
     uint32_t type;
     uint32_t reserved;
@@ -117,7 +85,6 @@ struct virtio_blk_req {
 };
 
 bool virt_dev_init(virtio_mmio_t* virtio_mmio);
-void blk_cfg_init(blk_desc_t* blk);
 bool virtio_be_blk_handler(emul_access_t* acc);
 void virt_dev_reset(virtio_mmio_t* v_m);
 

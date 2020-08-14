@@ -3,7 +3,6 @@
 
 #include <emul.h>
 #include <objcache.h>
-#include <util.h>
 #include <virt_dev.h>
 #include <virtq.h>
 #include <vm.h>
@@ -111,6 +110,7 @@ typedef struct virt_mmio_regs {
 
 struct virtio_mmio {
     uint32_t id;
+    uint32_t vm_id;
     uint64_t va;
     uint64_t pa;
     uint64_t size;
@@ -132,14 +132,14 @@ typedef struct virtio_mmio virtio_mmio_t;
 
 typedef struct virtio_mmio_manager {
     virtio_mmio_t virt_mmio_devs[VIRTIO_MMIO_DEVICE_MAX];
+    bool devs_probed;
+    uint16_t vm_has_dev;
     uint32_t num;
 } virtio_mmio_manager_t;
 
 extern virtio_mmio_manager_t virtio_mmio_manager;
 
 void virtio_init(vm_t* vm);
-void add_virtio_mmio();
-bool virtio_mmio_init(virtio_mmio_t* virtio_mmio);
 
 static inline virtio_mmio_t* get_virt_mmio(uint64_t addr)
 {

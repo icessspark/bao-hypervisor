@@ -1,7 +1,7 @@
 #!/bin/bash
 pushd lloader
 make DTB=virt.dtb TARGET=linux
-# make DTB=virt2.dtb TARGET=linux2
+make DTB=virt2.dtb TARGET=linux2
 popd
 make
 qemu-system-aarch64 -cpu cortex-a53 \
@@ -14,12 +14,13 @@ qemu-system-aarch64 -cpu cortex-a53 \
 -device virtio-blk-device,drive=test \
 -serial stdio \
 -serial tcp:127.0.0.1:12345,server,nowait \
+-serial tcp:127.0.0.1:12346,server,nowait \
 -display none \
 -s -S
 
 exit
 
-# Use this to connect to the second serial console (run before ./run):
-# stdbuf -i0  nc -lk 127.0.0.1 12345
+# Use this to connect to the second serial console (run after qemu boot):
+# stdbuf -i0 nc 127.0.0.1 12345
+# stdbuf -i0 nc 127.0.0.1 12346
 
-# -serial tcp:127.0.0.1:12346 \

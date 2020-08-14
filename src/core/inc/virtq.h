@@ -55,56 +55,13 @@ struct virtq {
 
 typedef struct virtq virtq_t;
 
-struct vring_desc {
-    /*Address (guest-physical)*/
-    uint64_t addr;
-    /* Length */
-    uint32_t len;
-    /* The flags as indicated above */
-    uint16_t flags;
-    /* We chain unused descriptors via this, too */
-    uint16_t next;
-} __attribute__((__packed__));
-
-struct vring_avail {
-    uint16_t flags;
-    uint16_t idx;
-    uint16_t ring[];
-    // uint16_t used_event; /* Only if VIRTIO_F_EVENT_IDX */
-} __attribute__((__packed__));
-
-struct vring_used_elem {
-    // Index of start of used descriptor chain
-    uint32_t id;
-    // Total length of the descriptor chain which was used (written to)
-    uint32_t len;
-} __attribute__((__packed__));
-
-struct vring_used {
-    uint16_t flags;
-    uint16_t idx;
-    struct vring_used_elem ring[];
-    // uint16_t avail_event; /* Only if VIRTIO_F_EVENT_IDX */
-} __attribute__((__packed__));
-
-/* Structure for scatter/gather I/O.  */
-struct iovec {
-    void *iov_base;   /* Pointer to data.  */
-    uint32_t iov_len; /* Length of data.  */
-};
-
-static int inline virtq_has_descs(virtq_t *vq)
-{
-    return vq->avail->idx != vq->last_avail_idx;
-}
-
-static inline uint32_t vring_size(unsigned int qsz)
-{
-    return ALIGN((sizeof(struct vring_desc) * qsz) +
-                     (sizeof(uint16_t) * (2 + qsz)),
-                 VRING_ALIGN_SIZE) +
-           ALIGN(sizeof(struct vring_used_elem) * qsz, VRING_ALIGN_SIZE);
-}
+// static inline uint32_t vring_size(unsigned int qsz)
+// {
+//     return ALIGN((sizeof(struct vring_desc) * qsz) +
+//                      (sizeof(uint16_t) * (2 + qsz)),
+//                  VRING_ALIGN_SIZE) +
+//            ALIGN(sizeof(struct vring_used_elem) * qsz, VRING_ALIGN_SIZE);
+// }
 
 void virtq_init(virtq_t *vq);
 bool process_guest_blk_notify(virtq_t *, virtio_mmio_t *);

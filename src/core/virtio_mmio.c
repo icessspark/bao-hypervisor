@@ -1,42 +1,36 @@
 #include <bao.h>
+#include <util.h>
 #include <virtio_mmio.h>
 
 // TODO support multi_vm
 // TODO remove size_max and seg_max restriction
 
-virtio_mmio_manager_t virtio_mmio_manager = {.num = 0};
+virtio_mmio_manager_t virtio_mmio_manager = {
+    .num = 0, .vm_has_dev = 0, .devs_probed = false};
 spinlock_t req_handler_lock = SPINLOCK_INITVAL;
 
-void virtio_init(vm_t* vm)
-{
-    INFO("virtio_init");
-
-    add_virtio_mmio();
-
-    for (int i = 0; i < virtio_mmio_manager.num; i++) {
-        virtio_mmio_t* virtio_mmio = &virtio_mmio_manager.virt_mmio_devs[i];
-        virtio_mmio_init(virtio_mmio);
-        emul_region_t emu = {.va_base = virtio_mmio->va,
-                             .pa_base = virtio_mmio->pa,
-                             .size = virtio_mmio->size,
-                             .handler = virtio_mmio->handler};
-        vm_add_emul(vm, &emu);
-    }
-}
-
 // TODO: enable virtio_mmio config
-void add_virtio_mmio()
+static void manager_add_virtio_mmio()
 {
-    virtio_mmio_t virtio_blk = {.id = 0,
-                                .va = VIRTIO_MMIO_ADDRESS,
-                                .pa = 0,
-                                .size = 0x400,
-                                .type = VIRTIO_TYPE_BLOCK};
-    virtio_mmio_manager.virt_mmio_devs[0] = virtio_blk;
-    virtio_mmio_manager.num++;
+    if (virtio_mmio_manager.devs_probed) return;
+
+    virtio_mmio_t virtio_devs[1] = {{.id = 0,
+                                     .vm_id = 0,
+                                     .va = VIRTIO_MMIO_ADDRESS,
+                                     .pa = 0,
+                                     .size = 0x400,
+                                     .type = VIRTIO_TYPE_BLOCK}};
+
+    for (int i = 0; i < 1; i++) {
+        virtio_mmio_manager.virt_mmio_devs[virtio_mmio_manager.num] =
+            virtio_devs[i];
+        virtio_mmio_manager.vm_has_dev |= (1 << virtio_devs[i].vm_id);
+        virtio_mmio_manager.num++;
+    }
+    virtio_mmio_manager.devs_probed = true;
 }
 
-bool virtio_mmio_init(virtio_mmio_t* virtio_mmio)
+static bool virtio_mmio_init(virtio_mmio_t* virtio_mmio)
 {
     virtio_mmio->regs.magic = VIRTIO_MMIO_MAGIG;
     virtio_mmio->regs.version = VIRTIO_VERSION;
@@ -47,7 +41,40 @@ bool virtio_mmio_init(virtio_mmio_t* virtio_mmio)
     virtio_mmio->regs.q_num_max = VIRTQUEUE_MAX_SIZE;
 
     if (!virt_dev_init(virtio_mmio)) {
-        ERROR("virt_device init error!");
         return false;
     }
+
+    return true;
+}
+
+void virtio_init(vm_t* vm)
+{
+    spin_lock(&req_handler_lock);
+
+    manager_add_virtio_mmio();
+
+    if (!(virtio_mmio_manager.vm_has_dev & (1 << vm->id))) {
+        INFO("vm%d has no virtio devs\n", vm->id);
+        spin_unlock(&req_handler_lock);
+        return;
+    } else {
+        INFO("vm%d has virtio devs", vm->id);
+    }
+
+    for (int i = 0; i < virtio_mmio_manager.num; i++) {
+        virtio_mmio_t* virtio_mmio = &virtio_mmio_manager.virt_mmio_devs[i];
+        vm->virtio = virtio_mmio;
+        if (!virtio_mmio_init(virtio_mmio)) {
+            ERROR("virt_dev init error!");
+        }
+        emul_region_t emu = {.va_base = virtio_mmio->va,
+                             .pa_base = virtio_mmio->pa,
+                             .size = virtio_mmio->size,
+                             .handler = virtio_mmio->handler};
+        vm_add_emul(vm, &emu);
+    }
+
+    INFO("virtio_init");
+
+    spin_unlock(&req_handler_lock);
 }
