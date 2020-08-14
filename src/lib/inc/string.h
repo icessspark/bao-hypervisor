@@ -28,5 +28,6 @@ char *strcat(char *dest, char *src);
 uint32_t strlen(const char *s);
 uint32_t strnlen(const char *s, size_t n);
 char *strcpy(char *dest, char *src);
+char *itostr(char *str, uint32_t n);
 
 #endif /* __STRING_H_ */

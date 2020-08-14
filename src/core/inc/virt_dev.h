@@ -45,6 +45,7 @@
 #define VIRTIO_BLK_T_IN 0
 #define VIRTIO_BLK_T_OUT 1
 #define VIRTIO_BLK_T_FLUSH 4
+#define VIRTIO_BLK_T_GET_ID 8
 #define VIRTIO_BLK_T_DISCARD 11
 #define VIRTIO_BLK_T_WRITE_ZEROES 13
 
@@ -52,6 +53,8 @@
 #define VIRTIO_BLK_S_OK 0
 #define VIRTIO_BLK_S_IOERR 1
 #define VIRTIO_BLK_S_UNSUPP 2
+
+#define VIRTIO_BLK_ID_BYTES 20
 
 typedef struct virtio_mmio virtio_mmio_t;
 // typedef bool (*dev_handler_t)(/*void* req,  void* buffer*/);
@@ -68,8 +71,6 @@ struct virt_dev {
 
     objcache_t* req_cache;
     void* req;
-
-    void (*handler)(void* req, void* buffer);
 };
 
 typedef struct virt_dev virt_dev_t;

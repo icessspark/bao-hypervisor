@@ -59,18 +59,18 @@
 			device_type = "cpu";
 			enable-method = "psci";
 		};
-		// cpu@2 {
-		// 	reg = <0x0 0x2>;
-		// 	compatible = "arm,cortex-a53";
-		// 	device_type = "cpu";
-		// 	enable-method = "psci";
-		// };
-        // cpu@4 {
-		// 	reg = <0x0 0x3>;
-		// 	compatible = "arm,cortex-a53";
-		// 	device_type = "cpu";
-		// 	enable-method = "psci";
-		// };
+		cpu@2 {
+			reg = <0x0 0x2>;
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			enable-method = "psci";
+		};
+        cpu@3 {
+			reg = <0x0 0x3>;
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			enable-method = "psci";
+		};
 	};
 
 	timer {

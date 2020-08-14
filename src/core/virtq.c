@@ -1,5 +1,6 @@
 #include <at_utils.h>
 #include <printf.h>
+#include <string.h>
 #include <virtq.h>
 
 // FIXME: uart-pl011 9000000.pl011: no DMA platform data
@@ -11,9 +12,15 @@ static volatile int header_idx = 0;
 static volatile int data_idx = 0;
 static volatile int status_idx = 0;
 
-static inline int next_desc(struct vring_desc *desc)
+void virtq_init(virtq_t *vq)
 {
-    return (!(desc->flags & VIRTQ_DESC_F_NEXT)) ? -1 : desc->next;
+    vq->ready = 0;
+    vq->vq_index = 0;
+    vq->num = 0;
+    vq->last_avail_idx = 0;
+    vq->last_used_idx = 0;
+    vq->used_flags = 0;
+    vq->to_notify = true;
 }
 
 static uint16_t get_virt_desc_header(virtq_t *vq, struct virtio_blk_req *req,
@@ -83,32 +90,45 @@ static uint16_t update_virt_desc_status(virtq_t *vq, struct virtio_blk_req *req,
     return desc_next;
 }
 
+static inline void virtq_disable_notify(virtq_t *vq)
+{
+    if (vq->used_flags & VRING_USED_F_NO_NOTIFY) return 0;
+    vq->used_flags |= VRING_USED_F_NO_NOTIFY;
+
+    fence_sync_write();
+}
+
+static inline void virtq_enable_notify(virtq_t *vq)
+{
+    if (!(vq->used_flags & VRING_USED_F_NO_NOTIFY)) return 0;
+    vq->used_flags &= ~VRING_USED_F_NO_NOTIFY;
+
+    fence_sync_write();
+};
+
 static uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num)
 {
     void *avail = ipa2va(avail_addr);
     vq->avail = avail;
     uint16_t avail_desc_idx = 0;
 
-    // printk("avail_flags 0x%x idx 0x%x ring_addr 0x%x%x\n", vq->avail->flags,
-    //        vq->avail->idx, u64_high_to_u32(vq->avail->ring),
-    //        u64_low_to_u32(vq->avail->ring));
-    // ISB();
+    // printf("[*avail_ring*]\n");
+    // printf("last_avail_idx %d cur_avail_idx %d\n", vq->last_avail_idx,
+    //        vq->avail->idx);
 
-    // printf("[*avail_ring*]\nlast_avail_idx %d cur_avail_idx %d\n",
-    //        vq->last_avail_idx, vq->avail->idx);
-
-    // virtq_disable_notify(vq);
-
+    vq->to_notify = true;
     if (vq->avail->flags != 0) {
-        WARNING("vq->avail->flags != 0");
+        // printk("Virt_blk Suppress h2g notify\n", cpu.id);
+        vq->to_notify = false;
     }
+
+    virtq_disable_notify(vq);
 
     if (!virtq_has_descs(vq)) {
-        // INFO("last_avail_idx >= cur_idx!");
         return num;
+    } else if (vq->avail->idx - vq->last_avail_idx == 1) {
+        virtq_enable_notify(vq);
     }
-
-    // virtq_enable_notify(vq);
 
     if (vq->avail->idx == 0) {
         WARNING("cur_avail_idx == 0 !");
@@ -117,12 +137,7 @@ static uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num)
         return avail_desc_idx;
     }
 
-    for (int i = 0; i < num; i++) {
-        if (i == (vq->last_avail_idx) % num) {
-            avail_desc_idx = vq->avail->ring[i];
-            break;
-        }
-    }
+    avail_desc_idx = vq->avail->ring[vq->last_avail_idx % num];
 
     vq->last_avail_idx++;
 
@@ -205,6 +220,13 @@ static void show_used_info(virtq_t *vq, uint32_t num)
            vq->used->idx);
 }
 
+static void virtq_notify(virtq_t *vq, int count)
+{
+    if (count != 0 && vq->to_notify) {
+        interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+    }
+}
+
 bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
 {
     uint64_t desc_table_addr = u32_to_u64_high(v_m->regs.q_desc_h) |
@@ -245,18 +267,23 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
 
         // handle request
         void *buf = ipa2va(req->data_bg);
-        // FIXME: decide on how to realize handler
-        if (req->type > 1) {
+        if (req->type == VIRTIO_BLK_T_GET_ID) {
+            char *dev_id = buf;
+            char *v_m_id = (char *)mem_alloc_page(1, SEC_HYP_VM, true);
+            strcpy(dev_id, "virtio_blk");
+            strcat(dev_id, itostr(v_m_id, v_m->id) + '\0');
+            INFO("Block request type VIRTIO_BLK_T_GET_ID, ID %s", dev_id);
+        } else if (req->type > 1) {
             update_virt_desc_status(vq, req, desc_next, desc_table,
                                     VIRTIO_BLK_S_UNSUPP);
         }
 
+        // FIXME: decide on how to realize handler
         blk_req_handler(req, buf);
-        process_count ++;
-        // v_m->dev->handler(req, buf);
+        process_count++;
     }
-    if (process_count != 0) {
-        interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
-    }
+
+    virtq_notify(vq, process_count);
+
     return true;
 }

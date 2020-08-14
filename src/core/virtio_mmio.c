@@ -1,7 +1,6 @@
 #include <bao.h>
 #include <virtio_mmio.h>
 
-// TODO support smp
 // TODO support multi_vm
 // TODO remove size_max and seg_max restriction
 

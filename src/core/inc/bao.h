@@ -28,22 +28,21 @@
 #include <printf.h>
 #include <util.h>
 
-
-#define INFO(args...)          \
-    {                          \
-        printf("INFO: " args); \
-        printf("\n");          \
+#define INFO(args...)            \
+    {                            \
+        printf("[INFO] " args);   \
+        printf("\n");            \
     }
 
 #define WARNING(args...)          \
     {                             \
-        printf("WARNING: " args); \
+        printf("[WARNING] " args); \
         printf("\n");             \
     }
 
 #define ERROR(args...)          \
     {                           \
-        printf("ERROR: " args); \
+        printf("[ERROR] " args); \
         printf("\n");           \
         while (1)               \
             ;                   \

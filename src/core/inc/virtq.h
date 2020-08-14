@@ -12,7 +12,8 @@
 typedef struct virtio_mmio virtio_mmio_t;
 
 // virtq的最大容量
-#define VIRTQUEUE_MAX_SIZE (8)
+// FIXME: 1024 would break
+#define VIRTQUEUE_MAX_SIZE (64)
 
 /* This marks a buffer as continuing via the next field. */
 #define VIRTQ_DESC_F_NEXT 1
@@ -38,16 +39,16 @@ typedef struct virtio_mmio virtio_mmio_t;
 
 struct virtq {
     int ready;
+    uint16_t vq_index;
     unsigned int num;
-    unsigned int iovec_size;
+    // unsigned int iovec_size;
     struct vring_desc volatile *desc;
     struct vring_avail volatile *avail;
     struct vring_used volatile *used;
     uint16_t last_avail_idx;
-    uint16_t avail_idx;
     uint16_t last_used_idx;
     uint16_t used_flags;
-    uint16_t vq_index;
+    bool to_notify;
 
     bool (*notify_handler)(struct virtq *, struct virtio_mmio *);
 };
@@ -92,16 +93,6 @@ struct iovec {
     uint32_t iov_len; /* Length of data.  */
 };
 
-struct virtq_ops {
-    int (*vq_init)(virtq_t *);
-    int (*vq_reset)(virtq_t *);
-    void (*vq_deinit)(virtq_t *);
-    void (*neg_features)(virtq_t *);
-};
-
-#define virtq_used_event(vq) (uint16_t *)&vq->avail->ring[vq->num]
-#define virtq_avail_event(vq) (uint16_t *)&vq->used->ring[vq->num]
-
 static int inline virtq_has_descs(virtq_t *vq)
 {
     return vq->avail->idx != vq->last_avail_idx;
@@ -115,24 +106,9 @@ static inline uint32_t vring_size(unsigned int qsz)
            ALIGN(sizeof(struct vring_used_elem) * qsz, VRING_ALIGN_SIZE);
 }
 
-int virtq_notify(virtq_t *vq);
-
-int inline virtq_disable_notify(virtq_t *vq) {
-    if (vq->used_flags & VRING_USED_F_NO_NOTIFY) return 0;
-    vq->used_flags |= VRING_USED_F_NO_NOTIFY;
-
-    fence_sync_write();
-}
-int inline virtq_enable_notify(virtq_t *vq)
-{
-    if (!(vq->used_flags & VRING_USED_F_NO_NOTIFY)) return 0;
-    vq->used_flags &= ~VRING_USED_F_NO_NOTIFY;
-
-    fence_sync_write();
-};
-
 void virtq_init(virtq_t *vq);
-
 bool process_guest_blk_notify(virtq_t *, virtio_mmio_t *);
+
+
 
 #endif /* __VIRT_DEV_H__ */
