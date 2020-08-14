@@ -78,7 +78,7 @@ static uint16_t update_virt_desc_status(virtq_t *vq, struct virtio_blk_req *req,
     }
 
     req->status = ipa2va(desc_addr);
-    *(req->status) = status;
+    *((char *)(req->status)) = (char)status;
 
     return desc_next;
 }
@@ -220,6 +220,8 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
     uint16_t avail_desc_idx = 0;
     uint16_t desc_chain_head_idx = 0;
 
+    int process_count = 0;
+
     while ((avail_desc_idx = get_avail_desc(vq, avail_addr, num)) >= 0) {
         if (avail_desc_idx == num) {
             // WARNING("Unable to get desc_chain!");
@@ -247,12 +249,14 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
         if (req->type > 1) {
             update_virt_desc_status(vq, req, desc_next, desc_table,
                                     VIRTIO_BLK_S_UNSUPP);
-            interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
         }
 
         blk_req_handler(req, buf);
+        process_count ++;
         // v_m->dev->handler(req, buf);
     }
-
+    if (process_count != 0) {
+        interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+    }
     return true;
 }

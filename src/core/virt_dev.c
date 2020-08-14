@@ -298,8 +298,6 @@ void blk_req_handler(void* req, void* buffer)
 {
     struct virtio_blk_req* blk_req = req;
 
-    // printf("interrupts_cpu_enable\n");
-    interrupts_cpu_enable(79, true);
     uint64_t sector = blk_req->sector;
     uint32_t len = blk_req->len;
 

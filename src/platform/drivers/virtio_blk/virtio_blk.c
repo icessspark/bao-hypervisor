@@ -16,11 +16,11 @@
 #include <drivers/virtio_ring.h>
 
 #include <cpu.h>
-#include <interrupts.h>
 #include <mem.h>
 #include <printf.h>
 #include <string.h>
 #include <vm.h>
+#include <fences.h>
 
 #define VIRTIO_MMIO_BASE 0x0a003000
 #define QUEUE_SIZE 8
@@ -33,7 +33,7 @@ static struct {
     struct vring_used *used;
 } __attribute__((aligned(PAGE_SIZE))) disk;
 
-static char status = 0;
+static volatile char status = 0;
 
 static spinlock_t virtio_lock;
 
@@ -108,27 +108,6 @@ void virtio_blk_init()
     virtio_mmio_setup_vq(0);
 }
 
-void virtio_blk_handler()
-{
-    // printf("disk.used->ring->id %x\n", disk.used->ring->id);
-    // printf("disk.used->idx %x\n", disk.used->idx);
-    // printf("status %x\n", status);
-
-    // for (int i = 0; i < 4096; ++i) {
-    //     printf("%02x ", debug_buf[i]);
-    //     if ((i + 1) % 32 == 0) {
-    //         printf("\n");
-    //     }
-    // }
-    if (status != 0) {
-        printf("status %d\n", status);
-        WARNING("virtio_blk_handler: status != 0");
-    }
-    writel(1, base + VIRTIO_MMIO_INTERRUPT_ACK);
-    // spin_unlock(&virtio_lock);
-    interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
-}
-
 void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)
 {
     struct virtio_blk_outhdr outhdr;
@@ -154,7 +133,7 @@ void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)
     disk.desc[1].flags |= VRING_DESC_F_NEXT;
     disk.desc[1].next = 2;
 
-    status = 0;
+    status = 3;
     disk.desc[2].addr = (u64)pa(&status);
     disk.desc[2].len = 1;
     disk.desc[2].flags = VRING_DESC_F_WRITE;  // device writes the status
@@ -165,15 +144,22 @@ void virtio_disk_rw(u64 sector, u64 count, char *buf, int write)
     // avail[2...] are desc[] indices the device should process.
     // we only tell device the first index in our chain of descriptors.
     disk.avail[2 + (disk.avail[1] % QUEUE_SIZE)] = 0;
-    asm("dsb sy");
+    fence_sync();
     disk.avail[1] = disk.avail[1] + 1;
 
     writel(0, base + VIRTIO_MMIO_QUEUE_NOTIFY);
-    int i = 0;
-    while (readl(base + VIRTIO_MMIO_QUEUE_NOTIFY) != 0) {
-        i++;
-        if (i > 0x100) break;
+
+    while (1) {
+        fence_sync();
+        switch (status) {
+            case VIRTIO_BLK_S_OK: return;
+            case VIRTIO_BLK_S_IOERR: ERROR("%s VIRTIO_BLK_S_IOERR", __func__);
+            case VIRTIO_BLK_S_UNSUPP: ERROR("%s VIRTIO_BLK_S_UNSUPP", __func__);
+            default:
+                break;
+        }
     }
+
 }
 
 void virtio_blk_read(unsigned long sector, unsigned long count, void *buf)
