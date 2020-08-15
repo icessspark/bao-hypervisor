@@ -16,8 +16,8 @@
 #ifndef __ARCH_INTERRUPTS_H__
 #define __ARCH_INTERRUPTS_H__
 
-#include <bao.h>
 #include <arch/gic.h>
+#include <bao.h>
 
 #define IPI_CPU_MSG 1
 #define MAX_INTERRUPTS GIC_MAX_INTERUPTS

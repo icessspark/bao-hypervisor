@@ -59,8 +59,10 @@ char *strcat(char *dest, char *src)
 {
     char *save = dest;
 
-    for (; *dest; ++dest);
-    while ((*dest++ = *src++) != 0);
+    for (; *dest; ++dest)
+        ;
+    while ((*dest++ = *src++) != 0)
+        ;
 
     return (save);
 }
@@ -104,4 +106,15 @@ uint32_t strcmp(char *str0, char *str1)
     }
 
     return (uint32_t)(tmp0 != tmp1);
+}
+
+char* itostr(char *str, uint32_t n)
+{
+    uint16_t i = 0;
+    if(n == 0) str[0] = '0';
+    for (; n > 0; i++) {
+        str[i] = '0' + (n % 10);
+        n /= 10;
+    }
+    return str;
 }

@@ -18,8 +18,8 @@
 #define __GIC_H__
 
 #include <bao.h>
-#include <emul.h>
 #include <bitmap.h>
+#include <emul.h>
 #include <spinlock.h>
 
 #define GIC_MAX_INTERUPTS 1024
@@ -253,7 +253,7 @@ extern volatile gicd_t gicd;
 extern volatile gicc_t gicc;
 extern volatile gich_t gich;
 
-enum int_state { INV, PEND, ACT, PENDACT};
+enum int_state { INV, PEND, ACT, PENDACT };
 
 typedef struct {
     uint32_t CTLR;

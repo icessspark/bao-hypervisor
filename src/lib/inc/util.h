@@ -17,11 +17,14 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include <bao.h>
+#include <arch/sysregs.h>
+
 /* UTILITY MACROS */
 
 /* align VAL to TO which must be power a two */
 #define ALIGN(VAL, TO) ((((VAL) + (TO)-1) / (TO)) * TO)
-#define NUM_PAGES(SZ) (ALIGN(SZ, PAGE_SIZE)/PAGE_SIZE)
+#define NUM_PAGES(SZ) (ALIGN(SZ, PAGE_SIZE) / PAGE_SIZE)
 
 #define SR_OR(VAL, SHIFT) (((VAL) >> (SHIFT)) | VAL)
 /* Next Power Of Two */
@@ -48,5 +51,25 @@
 #define in_range(_addr, _base, _size) range_in_range(_addr, 0, _base, _size)
 
 #endif
+
+static inline uint32_t u64_low_to_u32(uint64_t n64)
+{
+    return n64 & 0xffffffff;
+}
+
+static inline uint32_t u64_high_to_u32(uint64_t n64)
+{
+    return (n64 & 0xffffffff00000000) >> 32;
+}
+
+static inline uint64_t u32_to_u64_low(uint32_t n32)
+{
+    return (uint64_t)(n32);
+}
+
+static inline uint64_t u32_to_u64_high(uint32_t n32)
+{
+    return (uint64_t)(n32) << 32;
+}
 
 #endif /* __UTIL_H__ */

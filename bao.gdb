@@ -3,5 +3,5 @@ display/i $pc
 layout split
 break init
 set confirm off
-break *0x40000000
-symbol-file bin/qemu/aarch64-virt/bao.elf
+symbol-file ../../linux-4.19.133/vmlinux
+break vring_interrupt

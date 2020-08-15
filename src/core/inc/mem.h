@@ -16,12 +16,12 @@
 #ifndef __MEM_H__
 #define __MEM_H__
 
-#include <bao.h>
 #include <arch/mem.h>
-#include <page_table.h>
-#include <list.h>
-#include <spinlock.h>
+#include <bao.h>
 #include <cache.h>
+#include <list.h>
+#include <page_table.h>
+#include <spinlock.h>
 
 #ifndef __ASSEMBLER__
 

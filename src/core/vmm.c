@@ -14,14 +14,14 @@
  *
  */
 
-#include <vmm.h>
-#include <vm.h>
 #include <config.h>
 #include <cpu.h>
+#include <fences.h>
 #include <iommu.h>
 #include <spinlock.h>
-#include <fences.h>
 #include <string.h>
+#include <vm.h>
+#include <vmm.h>
 
 struct config* vm_config_ptr;
 
@@ -121,7 +121,8 @@ void vmm_init()
             vm_assign[vm_id].vm_shared_table =
                 *pt_get_pte(&cpu.as.pt, 0, (void*)BAO_VM_BASE);
         } else {
-            while (vm_assign[vm_id].vm_shared_table == 0);
+            while (vm_assign[vm_id].vm_shared_table == 0)
+                ;
             pte_t* pte = pt_get_pte(&cpu.as.pt, 0, (void*)BAO_VM_BASE);
             *pte = vm_assign[vm_id].vm_shared_table;
             fence_sync_write();

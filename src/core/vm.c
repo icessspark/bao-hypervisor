@@ -14,10 +14,10 @@
  *
  */
 
-#include <vm.h>
-#include <string.h>
-#include <mem.h>
 #include <cache.h>
+#include <mem.h>
+#include <string.h>
+#include <vm.h>
 
 struct emul_node {
     node_t node;
@@ -156,6 +156,15 @@ static void vm_map_img_rgn_inplace(vm_t* vm, const vm_config_t* config,
             PTE_VM_FLAGS);
 }
 
+extern void virtio_init(vm_t* vm);
+
+void vm_virtio_init(vm_t* vm, bool master)
+{
+    if (master) {
+        virtio_init(vm);
+    }
+}
+
 static void vm_map_img_rgn(vm_t* vm, const vm_config_t* config,
                            struct mem_region* reg)
 {
@@ -181,7 +190,8 @@ static void vm_init_mem_regions(vm_t* vm, const vm_config_t* config)
     }
 }
 
-bool console_emul_handler(emul_access_t *acc) {
+bool console_emul_handler(emul_access_t* acc)
+{
     if (acc->addr == 0x09000018 && !acc->write) {
         // uart->flag
         vcpu_writereg(cpu.vcpu, acc->reg, 0);
@@ -192,20 +202,20 @@ bool console_emul_handler(emul_access_t *acc) {
         printk("%c", c);
         return true;
     }
-    printk("console_emul_handler addr %x width %d %c\n", acc->addr, acc->width, acc->write ? 'W' : 'R');
+    printk("console_emul_handler addr %x width %d %c\n", acc->addr, acc->width,
+           acc->write ? 'W' : 'R');
     if (!acc->write) {
         vcpu_writereg(cpu.vcpu, acc->reg, 0);
     }
     return true;
 }
 
-void vm_add_emul_console(vm_t* vm) {
-    emul_region_t emu = {
-        .va_base = 0x09000000,
-        .pa_base = 0x09000000,
-        .size = PAGE_SIZE,
-        .handler = console_emul_handler
-    };
+void vm_add_emul_console(vm_t* vm)
+{
+    emul_region_t emu = {.va_base = 0x09000000,
+                         .pa_base = 0x09000000,
+                         .size = PAGE_SIZE,
+                         .handler = console_emul_handler};
     vm_add_emul(vm, &emu);
 }
 
@@ -229,14 +239,14 @@ static void vm_init_dev(vm_t* vm, const vm_config_t* config)
         for (int i = 0; i < config->platform.dev_num; i++) {
             struct dev_region* dev = &config->platform.devs[i];
             if (dev->id) {
-                if(iommu_vm_add_device(vm, dev->id) < 0){
+                if (iommu_vm_add_device(vm, dev->id) < 0) {
                     ERROR("Failed to add device to iommu");
                 }
             }
         }
     }
 
-    //vm_add_emul_console(vm);
+    // vm_add_emul_console(vm);
 }
 
 void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
@@ -275,6 +285,8 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
         vm_init_mem_regions(vm, config);
         vm_init_dev(vm, config);
     }
+
+    vm_virtio_init(vm, master);
 
     cpu_sync_barrier(&vm->sync);
 }

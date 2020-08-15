@@ -17,10 +17,10 @@
 #include <bao.h>
 #include <console.h>
 
-#include <platform.h>
 #include <cpu.h>
-#include <mem.h>
 #include <fences.h>
+#include <mem.h>
+#include <platform.h>
 
 volatile bao_uart_t uart
     __attribute__((section(".devices"), aligned(PAGE_SIZE)));

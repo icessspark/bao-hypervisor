@@ -39,7 +39,6 @@ uint64_t ipi_cpumsg_handler_num;
 void cpu_init(uint64_t cpu_id, uint64_t load_addr)
 {
     cpu_arch_init(cpu_id, load_addr);
-
     cpu.id = cpu_id;
     list_init(&cpu.interface.event_list);
 

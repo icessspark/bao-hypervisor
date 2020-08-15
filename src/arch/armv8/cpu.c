@@ -15,8 +15,8 @@
 
 #include <bao.h>
 #include <cpu.h>
-#include <platform.h>
 #include <page_table.h>
+#include <platform.h>
 
 /* Perform architecture dependent cpu cores initializations */
 void cpu_arch_init(uint64_t cpuid, uint64_t load_addr)

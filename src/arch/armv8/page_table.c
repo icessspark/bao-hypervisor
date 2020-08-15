@@ -13,10 +13,10 @@
  *
  */
 
-#include <bao.h>
-#include <page_table.h>
 #include <arch/sysregs.h>
+#include <bao.h>
 #include <cpu.h>
+#include <page_table.h>
 
 page_table_dscr_t armv8_pt_dscr = {
     .lvls = PT_LVLS,

@@ -13,9 +13,9 @@
  *
  */
 
-#include <vmm.h>
 #include <arch/sysregs.h>
 #include <interrupts.h>
+#include <vmm.h>
 
 void vmm_arch_init()
 {

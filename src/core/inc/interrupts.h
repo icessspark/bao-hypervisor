@@ -16,8 +16,8 @@
 #ifndef __INTERRUPTS_H__
 #define __INTERRUPTS_H__
 
-#include <bao.h>
 #include <arch/interrupts.h>
+#include <bao.h>
 
 typedef struct vm vm_t;
 

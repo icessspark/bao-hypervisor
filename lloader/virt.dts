@@ -59,7 +59,18 @@
 			device_type = "cpu";
 			enable-method = "psci";
 		};
-
+		// cpu@2 {
+		// 	reg = <0x0 0x2>;
+		// 	compatible = "arm,cortex-a53";
+		// 	device_type = "cpu";
+		// 	enable-method = "psci";
+		// };
+        // cpu@3 {
+		// 	reg = <0x0 0x3>;
+		// 	compatible = "arm,cortex-a53";
+		// 	device_type = "cpu";
+		// 	enable-method = "psci";
+		// };
 	};
 
 	timer {
@@ -78,8 +89,15 @@
 
 	chosen {
 		stdout-path = "/pl011@9000000";
-		bootargs = "earlycon console=ttyAMA0 rdinit=/sbin/init";
+		bootargs = "console=ttyAMA0 root=/dev/vda rw audit=0";
 		linux,initrd-start = <0x40001000>;
 		linux,initrd-end = <0x4010eab1>;
+	};
+
+    virtio_mmio@a000000 {
+		dma-coherent;
+		compatible = "virtio,mmio";
+		interrupts = <0x00 0x10 0x01>;
+		reg = <0x00 0xa000000 0x00 0x400>;
 	};
 };

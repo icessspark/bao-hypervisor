@@ -102,7 +102,8 @@ uint32_t uart_getc(Uart_Zynq* uart)
 
     // Chose one of the following: (Trigger Level or Not Empty)
     /* Wait until RxFIFO is filled up to the trigger level */
-    while (!uart->ch_status & UART_CH_STATUS_RTRIG);
+    while (!uart->ch_status & UART_CH_STATUS_RTRIG)
+        ;
     /* Wait until RxFIFO is not empty */
     // while(!uart->ch_status & UART_CH_STATUS_REMPTY);
 
@@ -114,7 +115,8 @@ uint32_t uart_getc(Uart_Zynq* uart)
 void uart_putc(Uart_Zynq* uart, int8_t c)
 {
     /* Wait until txFIFO is not full */
-    while (uart->ch_status & UART_CH_STATUS_TFUL);
+    while (uart->ch_status & UART_CH_STATUS_TFUL)
+        ;
 
     uart->tx_rx_fifo = c;
 }

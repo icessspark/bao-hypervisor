@@ -17,19 +17,20 @@
 #ifndef __VM_H__
 #define __VM_H__
 
-#include <bao.h>
 #include <arch/vm.h>
+#include <bao.h>
 
-#include <platform.h>
-#include <mem.h>
-#include <cpu.h>
-#include <spinlock.h>
-#include <config.h>
-#include <emul.h>
-#include <objcache.h>
-#include <interrupts.h>
 #include <bitmap.h>
+#include <config.h>
+#include <cpu.h>
+#include <emul.h>
+#include <interrupts.h>
 #include <iommu.h>
+#include <mem.h>
+#include <objcache.h>
+#include <platform.h>
+#include <spinlock.h>
+#include <virtio_mmio.h>
 
 typedef struct vm {
     uint64_t id;
@@ -52,6 +53,8 @@ typedef struct vm {
     objcache_t emul_oc;
 
     iommu_vm_t iommu;
+
+    struct virtio_mmio* virtio;
 
     BITMAP_ALLOC(interrupt_bitmap, MAX_INTERRUPTS);
 } vm_t;
@@ -102,6 +105,7 @@ static inline int vm_has_interrupt(vm_t* vm, int int_id)
 /* ------------------------------------------------------------*/
 
 void vm_arch_init(vm_t* vm, const vm_config_t* config);
+void vm_virtio_init(vm_t* vm, bool master);
 void vcpu_arch_init(vcpu_t* vcpu, vm_t* vm);
 void vcpu_run(vcpu_t* vcpu);
 uint64_t vcpu_readreg(vcpu_t* vcpu, uint64_t reg);

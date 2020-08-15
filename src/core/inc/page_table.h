@@ -16,8 +16,8 @@
 #ifndef __PAGE_TABLE_H__
 #define __PAGE_TABLE_H__
 
-#include <bao.h>
 #include <arch/page_table.h>
+#include <bao.h>
 
 #ifndef __ASSEMBLER__
 

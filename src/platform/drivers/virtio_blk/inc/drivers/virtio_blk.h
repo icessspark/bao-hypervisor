@@ -12,27 +12,27 @@
 #include "virtio_types.h"
 
 /* Feature bits */
-#define VIRTIO_BLK_F_SIZE_MAX	1	/* Indicates maximum segment size */
-#define VIRTIO_BLK_F_SEG_MAX	2	/* Indicates maximum # of segments */
-#define VIRTIO_BLK_F_GEOMETRY	4	/* Legacy geometry available */
-#define VIRTIO_BLK_F_RO		5	/* Disk is read-only */
-#define VIRTIO_BLK_F_BLK_SIZE	6	/* Block size of disk is available */
-#define VIRTIO_BLK_F_TOPOLOGY	10	/* Topology information is available */
-#define VIRTIO_BLK_F_MQ		12	/* Support more than one vq */
+#define VIRTIO_BLK_F_SIZE_MAX 1  /* Indicates maximum segment size */
+#define VIRTIO_BLK_F_SEG_MAX 2   /* Indicates maximum # of segments */
+#define VIRTIO_BLK_F_GEOMETRY 4  /* Legacy geometry available */
+#define VIRTIO_BLK_F_RO 5        /* Disk is read-only */
+#define VIRTIO_BLK_F_BLK_SIZE 6  /* Block size of disk is available */
+#define VIRTIO_BLK_F_TOPOLOGY 10 /* Topology information is available */
+#define VIRTIO_BLK_F_MQ 12       /* Support more than one vq */
 
 /* Legacy feature bits */
 #ifndef VIRTIO_BLK_NO_LEGACY
-#define VIRTIO_BLK_F_BARRIER	0	/* Does host support barriers? */
-#define VIRTIO_BLK_F_SCSI	7	/* Supports scsi command passthru */
-#define VIRTIO_BLK_F_FLUSH	9	/* Flush command supported */
-#define VIRTIO_BLK_F_CONFIG_WCE	11	/* Writeback mode available in config */
+#define VIRTIO_BLK_F_BARRIER 0     /* Does host support barriers? */
+#define VIRTIO_BLK_F_SCSI 7        /* Supports scsi command passthru */
+#define VIRTIO_BLK_F_FLUSH 9       /* Flush command supported */
+#define VIRTIO_BLK_F_CONFIG_WCE 11 /* Writeback mode available in config */
 #ifndef __KERNEL__
 /* Old (deprecated) name for VIRTIO_BLK_F_FLUSH */
-#define VIRTIO_BLK_F_WCE	VIRTIO_BLK_F_FLUSH
+#define VIRTIO_BLK_F_WCE VIRTIO_BLK_F_FLUSH
 #endif
 #endif /* !VIRTIO_BLK_NO_LEGACY */
 
-#define VIRTIO_BLK_ID_BYTES	20	/* ID string length */
+#define VIRTIO_BLK_ID_BYTES 20 /* ID string length */
 
 struct __attribute__((packed)) virtio_blk_config {
     /* The capacity (in 512-byte sectors) */
@@ -81,23 +81,23 @@ struct __attribute__((packed)) virtio_blk_config {
  */
 
 /* These two define direction */
-#define VIRTIO_BLK_T_IN		0
-#define VIRTIO_BLK_T_OUT	1
+#define VIRTIO_BLK_T_IN 0
+#define VIRTIO_BLK_T_OUT 1
 
 #ifndef VIRTIO_BLK_NO_LEGACY
 /* This bit says it's a scsi command, not an actual read or write */
-#define VIRTIO_BLK_T_SCSI_CMD	2
+#define VIRTIO_BLK_T_SCSI_CMD 2
 #endif /* VIRTIO_BLK_NO_LEGACY */
 
 /* Cache flush command */
-#define VIRTIO_BLK_T_FLUSH	4
+#define VIRTIO_BLK_T_FLUSH 4
 
 /* Get device ID command */
-#define VIRTIO_BLK_T_GET_ID	8
+#define VIRTIO_BLK_T_GET_ID 8
 
 #ifndef VIRTIO_BLK_NO_LEGACY
 /* Barrier before this op */
-#define VIRTIO_BLK_T_BARRIER	0x80000000
+#define VIRTIO_BLK_T_BARRIER 0x80000000
 #endif /* !VIRTIO_BLK_NO_LEGACY */
 
 /*
@@ -115,8 +115,8 @@ struct virtio_blk_outhdr {
 };
 
 /* And this is the final byte of the write scatter-gather list */
-#define VIRTIO_BLK_S_OK		0
-#define VIRTIO_BLK_S_IOERR	1
-#define VIRTIO_BLK_S_UNSUPP	2
+#define VIRTIO_BLK_S_OK 0
+#define VIRTIO_BLK_S_IOERR 1
+#define VIRTIO_BLK_S_UNSUPP 2
 
 #endif /* _LINUX_VIRTIO_BLK_H */
