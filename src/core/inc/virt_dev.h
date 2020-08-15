@@ -77,7 +77,7 @@ typedef struct virt_dev virt_dev_t;
 
 struct virtio_blk_req {
     uint32_t type;
-    uint32_t reserved;
+    uint32_t reserved;  // disk region offset
     uint64_t sector;
     uint64_t data_bg;
     uint32_t len;

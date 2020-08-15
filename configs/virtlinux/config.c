@@ -89,5 +89,6 @@ struct config config = {
 
                           .arch = {.gic = {.gicc_addr = 0x08010000,
                                            .gicd_addr = 0x08000000}}},
-         }},
+         }
+        },
 };

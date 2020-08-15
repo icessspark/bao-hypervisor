@@ -3,6 +3,7 @@
 #include <printf.h>
 #include <util.h>
 #include <virt_dev.h>
+#include <vm.h>
 
 // FIXME: EXT4-fs (vda): initial error
 
@@ -42,19 +43,22 @@ typedef struct blk_desc {
 
 void blk_features_init(uint64_t* features)
 {
-    *features |= VIRTIO_F_VERSION_1;          /*a simple way to detect legacy devices or drivers*/
+    *features |=
+        VIRTIO_F_VERSION_1; /*a simple way to detect legacy devices or drivers*/
     *features |= VIRTIO_BLK_F_SIZE_MAX;
-    // *features |= VIRTIO_BLK_F_SIZE_MAX;    /* Indicates maximum segment size */
-    *features |= VIRTIO_BLK_F_SEG_MAX;        /* Indicates maximum # of segments */
+    // *features |= VIRTIO_BLK_F_SIZE_MAX;    /* Indicates maximum segment size
+    // */
+    *features |= VIRTIO_BLK_F_SEG_MAX; /* Indicates maximum # of segments */
     // *features |= VIRTIO_BLK_F_GEOMETR;        /* Legacy geometry available */
     // *features |= VIRTIO_BLK_F_RO;             /* Disk is read-only */
-    // *features |= VIRTIO_BLK_F_BLK_SIZE;       /* Block size of disk is available*/
+    // *features |= VIRTIO_BLK_F_BLK_SIZE;       /* Block size of disk is
+    // available*/
     // TODO: add flush support
     // *features |= VIRTIO_BLK_F_FLUSH;          /* Flush command supported */
-    // *features |= VIRTIO_BLK_F_TOPOLOGY;       /* Topology information is available */ 
-    // *features |= VIRTIO_BLK_F_CONFIG_WCE;     /* Writeback mode available in config */ 
-    // *features |= VIRTIO_BLK_F_DISCARD;        /* Trim blocks */ 
-    // *features |= VIRTIO_BLK_F_WRITE_ZEROES;   /* Write zeros */
+    // *features |= VIRTIO_BLK_F_TOPOLOGY;       /* Topology information is
+    // available */ *features |= VIRTIO_BLK_F_CONFIG_WCE;     /* Writeback mode
+    // available in config */ *features |= VIRTIO_BLK_F_DISCARD;        /* Trim
+    // blocks */ *features |= VIRTIO_BLK_F_WRITE_ZEROES;   /* Write zeros */
 }
 
 bool virt_dev_init(virtio_mmio_t* virtio_mmio)
@@ -82,13 +86,14 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio)
             objcache_init(&dev->req_cache, sizeof(struct virtio_blk_req),
                           SEC_HYP_GLOBAL, true);
             struct virtio_blk_req* req = objcache_alloc(&dev->req_cache);
-            req->reserved = 0;
+            req->reserved = virtio_mmio->pa;
+            dev->req = req;
 
             // 分配vq_cache对象并初始化
             objcache_init(&virtio_mmio->vq_cache, sizeof(virtq_t),
                           SEC_HYP_GLOBAL, true);
             virtq_t* vq = objcache_alloc(&virtio_mmio->vq_cache);
-            virtq_init(vq) ;
+            virtq_init(vq);
             vq->notify_handler = process_guest_blk_notify;
 
             // virtio_mmio和virt_dev、virtq相互关联
@@ -101,7 +106,6 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio)
             break;
         default:
             ERROR("Wrong virtio device type!\n");
-            break;
     }
 
     return true;
@@ -110,7 +114,7 @@ bool virt_dev_init(virtio_mmio_t* virtio_mmio)
 // TODO: complete blk cfg
 void blk_cfg_init(blk_desc_t* blk_cfg)
 {
-    blk_cfg->capacity = 2000 * 1024 * 1024 / 512;
+    blk_cfg->capacity = 2000 * 1024 * 1024 / SECTOR_BSIZE;
     blk_cfg->size_max = 0x1000; /* not negotiated */
     blk_cfg->seg_max = BLOCKIF_IOV_MAX;
     // blk_cfg->geometry.cylinders = 0; /* no geometry */
@@ -137,21 +141,23 @@ void virt_dev_reset(virtio_mmio_t* v_m)
 // TODO: reconsider the implement location
 bool virtio_be_blk_handler(emul_access_t* acc)
 {
+    spin_lock(&req_handler_lock);
+
     uint64_t addr = acc->addr;
 
     virtio_mmio_t* virtio_mmio = get_virt_mmio(addr);
 
-    spin_lock(&req_handler_lock);
+    // printk("vm_id %d ", virtio_mmio->vm_id);
 
-    //    INFO("virtio_emul_handler addr 0x%x %s ", addr, acc->write ? "write to
-    //    host" : "read from host");
+    // INFO("virtio_emul_handler addr 0x%x v_m addr 0x%x %s ", addr,
+    //      virtio_mmio->va, acc->write ? "write to host" : "read from host");
 
-    if (addr < VIRTIO_MMIO_ADDRESS) {
+    if (addr < virtio_mmio->va) {
         ERROR("virtio_emul_handler address error");
         return false;
     }
 
-    uint32_t offset = addr - VIRTIO_MMIO_ADDRESS;
+    uint32_t offset = addr - virtio_mmio->va;
 
     if (!acc->write) {
         uint32_t value = 0;
@@ -172,7 +178,7 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                 break;
             case VIRTIO_MMIO_STATUS:
                 value = virtio_mmio->regs.dev_stat;
-                // printk("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
+                printk("read VIRTIO_MMIO_STATUS 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_HOST_FEATURES:
                 if (virtio_mmio->regs.dev_feature_sel)
@@ -288,6 +294,7 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                 // printk("write q_dev_h 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_QUEUE_READY:
+                virtio_mmio->vq->ready = value;
                 virtio_mmio->regs.q_ready = value;
                 // printk("write q_ready 0x%x\n\r", value);
                 break;
@@ -307,14 +314,15 @@ void blk_req_handler(void* req, void* buffer)
     struct virtio_blk_req* blk_req = req;
 
     uint64_t sector = blk_req->sector;
-    uint32_t len = blk_req->len;
+    uint32_t len = blk_req->len / SECTOR_BSIZE;
+    uint32_t offset = blk_req->reserved / SECTOR_BSIZE;
 
     if (blk_req->type == VIRTIO_BLK_T_IN) {
-        // printf("[C%d][BLK][R] sector %08lx, len %04x\n", cpu.id, sector, len);
-        virtio_blk_read(sector, len / SECTOR_BSIZE, buffer);
+        printf("[C%d][BLK][R] sector %08lx, offset 0x%x, len %04x\n", cpu.id, sector, offset, len);
+        virtio_blk_read(sector + offset, len, buffer);
     } else if (blk_req->type == VIRTIO_BLK_T_OUT) {
-        // printf("[C%d][BLK][W] sector %08lx, len %04x\n", cpu.id, sector, len);
-        virtio_blk_write(sector, len / SECTOR_BSIZE, buffer);
+        printf("[C%d][BLK][W] sector %08lx, offset 0x%x, len %04x\n", cpu.id, sector, offset, len);
+        virtio_blk_write(sector + offset, len, buffer);
     } else if (blk_req->type != 8) {
         ERROR("Wrong block request type %d ", blk_req->type);
     }

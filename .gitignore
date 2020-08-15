@@ -9,11 +9,14 @@ build/*
 vmlinux
 *.dtb
 *.gz
+*.txt
 
 configs/*
+configs/**/config.S
+
 !configs/Makefile
 !configs/linker.ld 
 !configs/example/
-
+!configs/virtlinux
 
 

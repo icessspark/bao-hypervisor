@@ -8,7 +8,7 @@
 #include <vm.h>
 
 #define VIRTIO_MMIO_ADDRESS 0xa000000
-#define VIRTIO_MMIO_SIZE 0x200
+#define VIRTIO_MMIO_SIZE 0x400
 #define VIRTIO_MMIO_DEVICE_MAX 64
 
 #define VIRTIO_MMIO_MAGIG (0x74726976)
@@ -115,6 +115,7 @@ struct virtio_mmio {
     uint64_t pa;
     uint64_t size;
     uint32_t type;
+    uint32_t int_id;
     handler_t handler;
 
     uint64_t driver_features;
@@ -126,6 +127,8 @@ struct virtio_mmio {
 
     objcache_t* vq_cache;
     struct virtq* vq;
+    // FIXME: due to prev dev_cache, need to reserve some space
+    uint64_t reserve[64];
 };
 
 typedef struct virtio_mmio virtio_mmio_t;
@@ -143,6 +146,7 @@ void virtio_init(vm_t* vm);
 
 static inline virtio_mmio_t* get_virt_mmio(uint64_t addr)
 {
+    // printf("addr 0x%x, index %d\n", addr, (addr - VIRTIO_MMIO_ADDRESS) / VIRTIO_MMIO_SIZE);
     return &virtio_mmio_manager.virt_mmio_devs[(addr - VIRTIO_MMIO_ADDRESS) /
                                                VIRTIO_MMIO_SIZE];
 }

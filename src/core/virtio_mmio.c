@@ -14,16 +14,25 @@ static void manager_add_virtio_mmio()
 {
     if (virtio_mmio_manager.devs_probed) return;
 
-    virtio_mmio_t virtio_devs[1] = {{.id = 0,
-                                     .vm_id = 0,
-                                     .va = VIRTIO_MMIO_ADDRESS,
-                                     .pa = 0,
-                                     .size = 0x400,
-                                     .type = VIRTIO_TYPE_BLOCK}};
+#define DEV_NUN 2
 
-    for (int i = 0; i < 1; i++) {
-        virtio_mmio_manager.virt_mmio_devs[virtio_mmio_manager.num] =
-            virtio_devs[i];
+    virtio_mmio_t virtio_devs[DEV_NUN] = {{.id = 0,
+                                           .vm_id = 0,
+                                           .va = VIRTIO_MMIO_ADDRESS,
+                                           .pa = 0,
+                                           .size = VIRTIO_MMIO_SIZE,
+                                           .int_id = 0x10 + 32,
+                                           .type = VIRTIO_TYPE_BLOCK},
+                                          {.id = 1,
+                                           .vm_id = 1,
+                                           .va = VIRTIO_MMIO_ADDRESS + VIRTIO_MMIO_SIZE,
+                                           .pa = 2097152000,
+                                           .size = VIRTIO_MMIO_SIZE,
+                                           .int_id = 0x11 + 32,
+                                           .type = VIRTIO_TYPE_BLOCK}};
+
+    for (int i = 0; i < DEV_NUN; i++) {
+        virtio_mmio_manager.virt_mmio_devs[i] = virtio_devs[i];
         virtio_mmio_manager.vm_has_dev |= (1 << virtio_devs[i].vm_id);
         virtio_mmio_manager.num++;
     }
@@ -63,6 +72,7 @@ void virtio_init(vm_t* vm)
 
     for (int i = 0; i < virtio_mmio_manager.num; i++) {
         virtio_mmio_t* virtio_mmio = &virtio_mmio_manager.virt_mmio_devs[i];
+        if (virtio_mmio->vm_id != vm->id) continue;
         vm->virtio = virtio_mmio;
         if (!virtio_mmio_init(virtio_mmio)) {
             ERROR("virt_dev init error!");
@@ -74,7 +84,7 @@ void virtio_init(vm_t* vm)
         vm_add_emul(vm, &emu);
     }
 
-    INFO("virtio_init");
+    INFO("vm%d virtio_init ok", vm->id);
 
     spin_unlock(&req_handler_lock);
 }

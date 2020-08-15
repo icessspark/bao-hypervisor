@@ -85,7 +85,7 @@ static uint16_t get_virt_desc_header(virtq_t *vq, struct virtio_blk_req *req,
     void *vreq = ipa2va(desc_addr);
     req->type = *(uint32_t *)vreq;
     req->sector = *(uint64_t *)(vreq + 8);
-
+    mem_free_vpage(&cpu.as, vreq, 1, false);
     return desc_next;
 }
 
@@ -113,7 +113,7 @@ static uint16_t get_virt_desc_data(virtq_t *vq, struct virtio_blk_req *req,
 static uint16_t update_virt_desc_status(virtq_t *vq, struct virtio_blk_req *req,
                                         uint16_t desc_idx,
                                         struct vring_desc *desc_table,
-                                        uint32_t status)
+                                        uint16_t status)
 {
     // status
     status_idx = desc_idx;  // for print
@@ -127,8 +127,11 @@ static uint16_t update_virt_desc_status(virtq_t *vq, struct virtio_blk_req *req,
         ERROR("desc_status flag error!");
     }
 
-    req->status = ipa2va(desc_addr);
-    *((char *)(req->status)) = (char)status;
+    void *vstatus = ipa2va(desc_addr);
+    *((char *)vstatus) = (char)status;
+    req->status = (char)status;
+    // FIXME: vpage can't be freed
+    // mem_free_vpage(&cpu.as, desc_addr, 1, false);
 
     return desc_next;
 }
@@ -263,17 +266,24 @@ static void show_used_info(virtq_t *vq, uint32_t num)
            vq->used->idx);
 }
 
-static void virtq_notify(virtq_t *vq, int count)
+static void virtq_notify(virtq_t *vq, int count, uint32_t int_id)
 {
     if (count != 0 && vq->to_notify) {
-        interrupts_vm_inject(cpu.vcpu->vm, 0x10 + 32, 0);
+        interrupts_vm_inject(cpu.vcpu->vm, int_id, 0);
     }
 }
 
 bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
 {
+    if (!vq->ready) {
+        WARNING("Virt_queue is not ready!");
+        return false;
+    }
     uint64_t desc_table_addr = u32_to_u64_high(v_m->regs.q_desc_h) |
                                u32_to_u64_low(v_m->regs.q_desc_l);
+
+    // printf("[DEBUG][vm%d] desc_table_addr 0x%lx\n", v_m->vm_id,
+    // desc_table_addr);
     uint64_t avail_addr =
         u32_to_u64_high(v_m->regs.q_drv_h) | u32_to_u64_low(v_m->regs.q_drv_l);
     uint64_t used_addr =
@@ -308,6 +318,9 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
         update_used_ring(vq, req, used_addr, desc_chain_head_idx, num);
         // show_used_info(vq, num);
 
+        // printf("[DEBUG][vm%d] req->data_bg 0x%lx\n", v_m->vm_id,
+        // req->data_bg);
+
         // handle request
         void *buf = ipa2va(req->data_bg);
         if (req->type == VIRTIO_BLK_T_GET_ID) {
@@ -323,10 +336,18 @@ bool process_guest_blk_notify(virtq_t *vq, virtio_mmio_t *v_m)
 
         // FIXME: decide on how to realize handler
         blk_req_handler(req, buf);
+
+        // FIXME: should free ppages?
+        mem_free_vpage(&cpu.as, desc_table, 1, false);
+        mem_free_vpage(&cpu.as, vq->desc, 1, false);
+        mem_free_vpage(&cpu.as, vq->avail, 1, false);
+        mem_free_vpage(&cpu.as, vq->used, 1, false);
+        mem_free_vpage(&cpu.as, buf, 1, false);
+
         process_count++;
     }
 
-    virtq_notify(vq, process_count);
+    virtq_notify(vq, process_count, v_m->int_id);
 
     return true;
 }

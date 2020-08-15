@@ -52,7 +52,9 @@ static inline void* ipa2va(uint64_t ipa)
     uint64_t offset = pa & (PAGE_SIZE - 1);
     void* va = mem_alloc_vpage(&cpu.as, SEC_HYP_PRIVATE, NULL, 1);
     ppages_t ppages = mem_ppages_get(pa & ~(PAGE_SIZE - 1), 1);
-    mem_map(&cpu.as, va, &ppages, 1, PTE_HYP_FLAGS);
+    if(mem_map(&cpu.as, va, &ppages, 1, PTE_HYP_FLAGS)) {
+        ERROR("ipa2va mem_map failed!");
+    }
 
     return va + offset;
 }
