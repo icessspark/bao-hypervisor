@@ -3,10 +3,6 @@
 #include <string.h>
 #include <virtq.h>
 
-// FIXME: uart-pl011 9000000.pl011: no DMA platform data
-// FIXME: systemd[1]: Set hostname to <kernel-4_19>
-//  两个核心饥饿、死锁？
-
 // For debug
 static volatile int header_idx = 0;
 static volatile int data_idx = 0;
@@ -204,7 +200,7 @@ static void update_used_ring(virtq_t *vq, struct virtio_blk_req *req,
     // update used ring
     update_used_flags(vq, used_addr);
 
-    // FIXME: real write len
+    // TODO: need to get more precious write len?
     vq->used->ring[vq->used->idx % num].id = desc_chain_head_idx;
     vq->used->ring[vq->used->idx % num].len = req->len;
     vq->last_used_idx = vq->used->idx;

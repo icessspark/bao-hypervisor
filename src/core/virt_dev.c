@@ -199,7 +199,7 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                 // printk("read VIRTIO_MMIO_QUEUE_READY 0x%x\n\r", value);
                 break;
             case VIRTIO_MMIO_INTERRUPT_STATUS:
-                // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS
+                // FIXME: VIRTIO_MMIO_INTERRUPT_STATUS(config change situation)
                 value = virtio_mmio->regs.irt_stat;
                 // printk("read VIRTIO_MMIO_INTERRUPT_STATUS 0x%x\n\r", value);
                 break;

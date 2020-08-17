@@ -1,16 +1,16 @@
-bin/*
-build/*
 *.o
 *.elf
 *.bin
 *.d
-
-.vscode
-vmlinux
 *.dtb
 *.gz
 *.txt
+vmlinux
 
+.vscode
+bin/*
+build/*
+doc/
 configs/*
 configs/**/config.S
 
@@ -18,5 +18,3 @@ configs/**/config.S
 !configs/linker.ld 
 !configs/example/
 !configs/virtlinux
-
-

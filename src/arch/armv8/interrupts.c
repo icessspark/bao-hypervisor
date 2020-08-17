@@ -38,8 +38,10 @@ void interrupts_arch_init()
     /* Wait for core 0 to map interupt controller */
     cpu_sync_barrier(&cpu_glb_sync);
 
+    /*init gicd regs*/
     if (cpu.id == CPU_MASTER) gic_init();
 
+    /*init gicc regs*/
     gic_cpu_init();
 
     interrupts_cpu_enable(platform.arch.gic.maintenance_id, true);

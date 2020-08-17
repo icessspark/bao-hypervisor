@@ -100,6 +100,7 @@ void gic_cpu_init()
         gicd.CPENDSGIR[i] = -1;
     }
 
+    /* All interrupts have lowest priority possible by default */
     for (int i = 0; i < GIC_NUM_PRIO_REGS(GIC_CPU_PRIV); i++) {
         gicd.IPRIORITYR[i] = -1;
     }
@@ -111,8 +112,10 @@ void gic_maintenance_handler(uint64_t arg, uint64_t source);
 
 void gic_init()
 {
+    // get list register size
     NUM_LRS = gich_num_lrs();
-    size_t int_num = gic_num_irqs();
+    // get max num of SPIs
+    size_t int_num = gic_num_irqs();    
 
     /* Bring distributor to known state */
     for (int i = GIC_NUM_PRIVINT_REGS; i < GIC_NUM_INT_REGS(int_num); i++) {
@@ -135,7 +138,7 @@ void gic_init()
 
     /* ICFGR are platform dependent, lets leave them as is */
 
-    /* No need to setup gicd.NSACR as all interrupts are  setup to group 1 */
+    /* No need to setup gicd.NSACR as all interrupts are setup to group 1 */
 
     interrupts_reserve(platform.arch.gic.maintenance_id,
                        gic_maintenance_handler);
@@ -154,6 +157,7 @@ void gic_handle()
 
     enum irq_res res = interrupts_handle(id, src);
 
+    // deactivate int
     gicc.EOIR = ack;
 
     if (res == HANDLED_BY_HYP) gicc.DIR = ack;

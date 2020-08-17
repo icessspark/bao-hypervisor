@@ -100,28 +100,49 @@
     bit_extract(sgir, GICD_SGIR_TRGLSTFLT_OFF, GICD_SGIR_TRGLSTFLT_LEN)
 
 typedef struct {
-    uint32_t CTLR;
-    uint32_t TYPER;
-    uint32_t IIDR;
+    /* Enables interrupts and affinity routing.*/
+    uint32_t CTLR;  
+    /* Provides information about what features the GIC implementation supports. It indicates:
+    - Whether the GIC implementation supports two Security states.
+    - The maximum number of INTIDs that the GIC implementation supports.
+    - The number of PEs that can be used as interrupt targets.*/
+    uint32_t TYPER;  
+    /* Provides information about the implementer and revision of the Distributor.*/
+    uint32_t IIDR;  
     uint8_t pad0[0x0080 - 0x000C];
-    uint32_t IGROUPR[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];  // banked CPU
-    uint32_t ISENABLER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
-    uint32_t ICENABLER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
-    uint32_t ISPENDR[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
+    /* banked CPU */
+    uint32_t IGROUPR[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
+    /* Enables forwarding of the corresponding interrupt to the CPU interfaces.*/
+    uint32_t ISENABLER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)]; 
+    /* Disables forwarding of the corresponding interrupt to the CPU interfaces.*/
+    uint32_t ICENABLER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)]; 
+    /* Adds the pending state to the corresponding interrupt.*/
+    uint32_t ISPENDR[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];  
+    /* Removes the pending state from the corresponding interrupt.
+    Next two registers are used when saving and restoring GIC state.*/
     uint32_t ICPENDR[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
+    /* Activates the corresponding interrupt. */
     uint32_t ISACTIVER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
+    /* Deactivates the corresponding interrupt*/
     uint32_t ICACTIVER[GIC_NUM_INT_REGS(GIC_MAX_INTERUPTS)];
-    uint32_t IPRIORITYR[GIC_NUM_PRIO_REGS(GIC_MAX_INTERUPTS)];
-    //    uint8_t pad1[0x0800 - 0x07FC];
-    uint32_t ITARGETSR[GIC_NUM_TARGET_REGS(GIC_MAX_INTERUPTS)];
-    //    uint8_t pad2[0x0C00 - 0x0820];
-    uint32_t ICFGR[GIC_NUM_CONFIG_REGS(GIC_MAX_INTERUPTS)];
+    /* Holds the priority of the corresponding interrupt.*/
+    uint32_t IPRIORITYR[GIC_NUM_PRIO_REGS(GIC_MAX_INTERUPTS)];  
+    // uint8_t pad1[0x0800 - 0x07FC];
+    /* holds the list of CPU interfaces to which the Distributor forwards the interrupt.*/
+    uint32_t ITARGETSR[GIC_NUM_TARGET_REGS(GIC_MAX_INTERUPTS)];  
+    // uint8_t pad2[0x0C00 - 0x0820];
+    /* Determines whether the corresponding interrupt is edge-triggered or level-sensitive.*/
+    uint32_t ICFGR[GIC_NUM_CONFIG_REGS(GIC_MAX_INTERUPTS)];  
     uint8_t pad3[0x0E00 - 0x0D00];
-    uint32_t NSACR[GIC_NUM_SEC_REGS(GIC_MAX_INTERUPTS)];
-    uint32_t SGIR;
+    /* Enables Secure software to permit Non-secure software on a particular PE to create and control Group 0 interrupts.*/
+    uint32_t NSACR[GIC_NUM_SEC_REGS(GIC_MAX_INTERUPTS)]; 
+    /* Controls the generation of SGIs.*/
+    uint32_t SGIR;  
     uint8_t pad4[0x0F10 - 0x0F04];
-    uint32_t CPENDSGIR[GIC_NUM_SGI_REGS];
-    uint32_t SPENDSGIR[GIC_NUM_SGI_REGS];
+    /* Removes the pending state from an SGI.*/
+    uint32_t CPENDSGIR[GIC_NUM_SGI_REGS]; 
+    /* Adds the pending state to an SGI.  */
+    uint32_t SPENDSGIR[GIC_NUM_SGI_REGS];   
 } __attribute__((__packed__)) gicd_t;
 
 /* CPU Interface Control Register, GICC_CTLR */
@@ -137,23 +158,50 @@ typedef struct {
 #define GICC_IAR_CPU_MSK (BIT_MASK(GICC_IAR_CPU_OFF, GICC_IAR_CPU_LEN))
 
 typedef struct {
+    /*Controls the CPU interface, including enabling of interrupt groups, 
+    interrupt signal bypass, binary point registers used, 
+    and separation of priority drop and interrupt deactivation.*/
     uint32_t CTLR;
+    /* provides an interrupt priority filter. 
+    Only interrupts with higher priority than the value in this register are signaled to the PE.*/
     uint32_t PMR;
+    /* Defines the point at which the priority value fields split into two parts, 
+    the group priority field and the subpriority field.*/
     uint32_t BPR;
+    /* Provides the INTID of the signaled interrupt. 
+    A read of this register by the PE acts as an acknowledge for the interrupt.*/
     uint32_t IAR;
+    /* A write to this register performs priority drop for the specified interrupt and, 
+    if the appropriate GICC_CTLR.EOImodeS or GICC_CTLR.EOImodeNS field == 0, also deactivates the interrupt.*/
     uint32_t EOIR;
+    /* indicates the running priority of the CPU interface.*/
     uint32_t RPR;
+    /* Provides the INTID of the highest priority pending interrupt on the CPU interface.*/
     uint32_t HPPIR;
+    /* Defines the point at which the priority value fields split into two parts, 
+    the group priority field and the subpriority field. 
+    The group priority field determines Group 1 interrupt preemption.*/
     uint32_t ABPR;
+    /* Provides the INTID of the signaled Group 1 interrupt. 
+      A read of this register by the PE acts as an acknowledge for the interrupt.*/
     uint32_t AIAR;
+    /*A write to this register performs priority drop for the specified Group 1 interrupt and, 
+    if the appropriate GICC_CTLR.EOImodeS or GICC_CTLR.EOImodeNS field == 0, also deactivates the interrupt.*/
     uint32_t AEOIR;
+    /* If the highest priority pending interrupt is in Group 1, 
+    this register provides the INTID of the highest priority pending interrupt on the CPU interface.*/
     uint32_t AHPPIR;
     uint8_t pad0[0x00D0 - 0x002C];
+    /* Provides information about interrupt active priorities.*/
     uint32_t APR[GIC_NUM_APR_REGS];
+    /* Provides information about Group 1 interrupt active priorities.*/
     uint32_t NSAPR[GIC_NUM_APR_REGS];
     uint8_t pad1[0x00FC - 0x00F0];
+    /* Provides information about the implementer and revision of the CPU Interface.*/
     uint32_t IIDR;
     uint8_t pad2[0x1000 - 0x0100];
+    /*When interrupt priority drop is separated from interrupt deactivation, 
+    a write to this register deactivates the specified interrupt.*/
     uint32_t DIR;
 } __attribute__((__packed__)) gicc_t;
 
@@ -214,18 +262,30 @@ typedef struct {
 #define GICH_MISR_VGrp1D (1U << 7)
 
 typedef struct {
+    /* Controls the virtual CPU interface.*/
     uint32_t HCR;
+    /* Indicates the number of implemented virtual priority bits and List registers.*/
     uint32_t VTR;
+    /*Enables the hypervisor to save and restore the virtual machine view of the GIC state. 
+    This register is updated when a virtual machine updates the virtual CPU interface registers.*/
     uint32_t VMCR;
     uint8_t pad0[0x10 - 0x0c];
+    /* Indicates which maintenance interrupts are asserted.*/
     uint32_t MISR;
     uint8_t pad1[0x20 - 0x14];
+    /* Indicates which List registers have outstanding EOI maintenance interrupts.*/
     uint32_t EISR[GIC_NUM_LIST_REGS / (sizeof(uint32_t) * 8)];
     uint8_t pad2[0x30 - 0x28];
+    /* Indicates which List registers contain valid interrupts.*/
     uint32_t ELSR[GIC_NUM_LIST_REGS / (sizeof(uint32_t) * 8)];
     uint8_t pad3[0xf0 - 0x38];
+    /*These registers track which preemption levels are active in the virtual CPU interface, 
+    and indicate the current active priority. 
+    Corresponding bits are set to 1 in this register when an interrupt is acknowledged, 
+    based on GICH_LR<n>.Priority, and the least significant bit set is cleared on EOI.*/
     uint32_t APR;
     uint8_t pad4[0x100 - 0x0f4];
+    /* These registers provide context information for the virtual CPU interface.*/
     uint32_t LR[GIC_NUM_LIST_REGS];
 } __attribute__((__packed__)) gich_t;
 
@@ -248,6 +308,7 @@ typedef struct {
     uint8_t pad2[0x1000 - 0x0100];
     uint32_t DIR;
 } __attribute__((__packed__)) gicv_t;
+
 
 extern volatile gicd_t gicd;
 extern volatile gicc_t gicc;
@@ -288,6 +349,9 @@ void gicd_set_trgt(uint64_t int_id, uint8_t trgt);
 uint64_t gicd_get_prio(uint64_t int_id);
 enum int_state gicd_get_state(uint64_t int_id);
 
+/*The ITLinesNumber field only indicates the maximum number of SPIs that the GIC implementation might support.
+The GIC architecture does not require a GIC implementation to support a continuous range of SPI interrupt IDs. 
+Software must check which SPI INTIDs are supported, up to the maximum value indicated by GICD_TYPER.ITLinesNumber.*/
 static inline uint64_t gic_num_irqs()
 {
     uint32_t itlinenumber =
@@ -305,6 +369,7 @@ static inline bool gic_is_priv(uint64_t int_id)
     return int_id < GIC_CPU_PRIV;
 }
 
+// The number of implemented List registers, minus one.
 static inline uint64_t gich_num_lrs()
 {
     return ((gich.VTR & GICH_VTR_MSK) >> GICH_VTR_OFF) + 1;

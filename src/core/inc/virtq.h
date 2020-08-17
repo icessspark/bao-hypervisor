@@ -37,6 +37,7 @@ typedef struct virtio_mmio virtio_mmio_t;
 #define VRING_USED_ALIGN_SIZE 4
 #define VRING_DESC_ALIGN_SIZE 16
 
+// redesign virtq struct
 struct virtq {
     int ready;
     uint16_t vq_index;
