@@ -114,7 +114,7 @@ curr_el_spx_sync:
     b	.
 .balign ENTRY_SIZE
 curr_el_spx_irq:         
-    b	.
+    b   .
 .balign ENTRY_SIZE
 curr_el_spx_fiq:         
     b	.

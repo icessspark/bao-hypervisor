@@ -79,18 +79,16 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
-    if (int_id != 27 && int_id != 1 && int_id != 79)
-        INFO("interrupts_handle %d", int_id);
+    
+    if (int_id != 27 && int_id != 1 && int_id != 79 && int_id != 25) {
+        printf("[C%d] interrupts_handle %d \n", cpu.id, int_id);
+    }
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {
         interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
-
         return FORWARD_TO_VM;
-
     } else if (interrupt_is_reserved(int_id)) {
         interrupt_handlers[int_id](int_id, source);
-
         return HANDLED_BY_HYP;
-
     } else {
         ERROR("received unknown interrupt id = %d", int_id);
     }

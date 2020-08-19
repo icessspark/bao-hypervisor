@@ -27,3 +27,4 @@ core-objs-y+=iommu.o
 core-objs-y+=virtio_mmio.o
 core-objs-y+=virt_dev.o
 core-objs-y+=virtq.o
+core-objs-y+=timer.o

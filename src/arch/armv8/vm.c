@@ -19,6 +19,7 @@
 #include <page_table.h>
 #include <string.h>
 #include <vm.h>
+#include <timer.h>
 
 void vm_arch_init(vm_t* vm, const vm_config_t* config)
 {
@@ -117,6 +118,8 @@ void vcpu_arch_run(vcpu_t* vcpu)
 {
     // TODO: consider using TPIDR_EL2 to store vcpu pointer
     if (vcpu->arch.psci_ctx.state == ON) {
+        // try get clean between interrupts_cpu_enable & vcpu_arch_entry
+        interrupts_cpu_enable(NONSEC_EL2_PHY_TIMER_INT, true);
         vcpu_arch_entry();
     } else if (vcpu->arch.psci_ctx.state == OFF) {
         cpu_idle();

@@ -11,16 +11,6 @@ include_directories(
         src/arch/armv8/inc
         src/core/inc
         src/lib/inc
-        src/platform/hikey960/inc
-        src/platform/ultra96/inc
-        src/platform/zcu102/inc
-        src/platform/zcu104/inc
-)
-
-include_directories(
-        src/arch/armv8/inc
-        src/core/inc
-        src/lib/inc
         src/platform/drivers/pl011_uart/inc
         src/platform/drivers/zynq_uart/inc
         src/platform/drivers/virtio_blk/inc
@@ -28,6 +18,7 @@ include_directories(
         src/platform/ultra96/inc
         src/platform/zcu102/inc
         src/platform/zcu104/inc
+        src/platform/qemu/aarch64-virt/inc
 )
 
 add_executable(bao
@@ -64,6 +55,7 @@ add_executable(bao
         src/arch/armv8/platform.c
         src/arch/armv8/psci.c
         src/arch/armv8/smc.c
+        src/arch/armv8/timer.c
         src/arch/armv8/vgicv2.c
         src/arch/armv8/vm.c
         src/arch/armv8/vmm.c
@@ -92,6 +84,7 @@ add_executable(bao
         src/core/mem.c
         src/core/iommu.c
         src/core/objcache.c
+        src/core/timer.c
         src/core/virtio_mmio.c
         src/core/virt_dev.c
         src/core/virtq.c
@@ -123,6 +116,7 @@ add_executable(bao
         src/platform/zcu104/inc/plat/platform.h
         src/platform/zcu104/inc/plat/psci.h
         src/platform/zcu104/zcu104_desc.c
+        src/platform/qemu/aarch64-virt/virt_desc.c
         src/lib/printf.c
         src/lib/inc/printf.h
         src/platform/drivers/virtio_blk/virtio_blk.c

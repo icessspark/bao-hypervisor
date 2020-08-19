@@ -22,6 +22,7 @@
 #include <interrupts.h>
 #include <mem.h>
 #include <printk.h>
+#include <timer.h>
 #include <vmm.h>
 
 // FIXME: NET: Registered protocol family 1 (disappeared?)
@@ -49,13 +50,18 @@ void init(uint64_t cpu_id, uint64_t load_addr, uint64_t config_addr)
         console_init();
         INFO("Bao Hypervisor");
     }
+
     interrupts_init();
+
+    timer_init();
 
     if (cpu.id == CPU_MASTER) {
         virtio_blk_init();
         INFO("virtio_blk_init ok");
     }
+    
     vmm_init();
+
     /* Should never reach here */
     while (1)
         ;

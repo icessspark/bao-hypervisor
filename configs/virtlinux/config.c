@@ -80,15 +80,7 @@ struct config config = {
                                                      .interrupt_num = 2,
                                                      .interrupts =
                                                          (uint64_t[]){27, 43}}},
-                          /* Note:
-                           * IRQ 27 is PPI [16,32) interrupt ~ Timer
-                           * IRQ 43 is SPI 10 (32 + 11) interrupt ~ UART1
-                           * UART1 is specified in a special multi-uart qemu:
-                           * https://github.com/tonnylyz/qemu/tree/multi-uart
-                           * */
-
                           .arch = {.gic = {.gicc_addr = 0x08010000,
                                            .gicd_addr = 0x08000000}}},
-         }
-        },
+         }},
 };

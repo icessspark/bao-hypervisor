@@ -32,3 +32,4 @@ cpu-objs-y+=platform.o
 cpu-objs-y+=relocate.o
 cpu-objs-y+=iommu.o
 cpu-objs-y+=smmuv2.o
+cpu-objs-y+=timer.o
