@@ -76,6 +76,7 @@ add_executable(bao
         src/core/inc/page_table.h
         src/core/inc/platform.h
         src/core/inc/spinlock.h
+        src/core/inc/sched.h
         src/core/inc/tlb.h
         src/core/inc/vm.h
         src/core/inc/vmm.h
@@ -84,6 +85,7 @@ add_executable(bao
         src/core/mem.c
         src/core/iommu.c
         src/core/objcache.c
+        src/core/sched.c
         src/core/timer.c
         src/core/virtio_mmio.c
         src/core/virt_dev.c

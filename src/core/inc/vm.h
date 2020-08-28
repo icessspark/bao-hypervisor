@@ -76,7 +76,8 @@ typedef struct vcpu {
 extern vm_t vm;
 extern struct config* vm_config_ptr;
 
-void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id);
+void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id,
+             uint64_t vcpu_id, pte_t pte);
 void vm_start(vm_t* vm, uint64_t entry);
 vcpu_t* vm_get_vcpu(vm_t* vm, uint64_t vcpuid);
 void vm_add_emul(vm_t* vm, emul_region_t* emu);
@@ -115,5 +116,6 @@ void vcpu_writepc(vcpu_t* vcpu, uint64_t pc);
 bool vm_readmem(vm_t* vm, void* dest, uintptr_t vmaddr, size_t n);
 void vcpu_arch_run(vcpu_t* vcpu);
 void vcpu_arch_reset(vcpu_t* vcpu, uint64_t entry);
+vcpu_t* vm_vcpu_init(vm_t* vm, const vm_config_t* config, uint64_t id);
 
 #endif /* __VM_H__ */

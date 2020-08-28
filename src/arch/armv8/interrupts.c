@@ -19,6 +19,7 @@
 
 #include <arch/gic.h>
 #include <arch/sysregs.h>
+#include <arch/vgicv2.h>
 #include <cpu.h>
 #include <mem.h>
 #include <platform.h>
@@ -90,4 +91,9 @@ void interrupts_arch_vm_assign(vm_t *vm, uint64_t id)
 void interrupts_arch_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 {
     vgicd_inject(&vm->arch.vgicd, id, source);
+}
+
+bool interrupts_arch_int_is_enable(vcpu_t *vcpu, uint64_t int_id)
+{
+    return vgic_int_is_enable(vcpu, int_id);
 }

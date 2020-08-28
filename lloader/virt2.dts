@@ -53,12 +53,12 @@
 			device_type = "cpu";
 			enable-method = "psci";
 		};
-		cpu@1 {
-			reg = <0x0 0x1>;
-			compatible = "arm,cortex-a53";
-			device_type = "cpu";
-			enable-method = "psci";
-		};
+		// cpu@1 {
+		// 	reg = <0x0 0x1>;
+		// 	compatible = "arm,cortex-a53";
+		// 	device_type = "cpu";
+		// 	enable-method = "psci";
+		// };
 
 	};
 
@@ -78,17 +78,18 @@
 
 	chosen {
 		stdout-path = "/pl011@9000000";
-		bootargs = "console=ttyAMA0 root=/dev/vda rw audit=0";
+		bootargs = "earlycon console=ttyAMA0 rdinit=/sbin/init";
+		// bootargs = "console=ttyAMA0 root=/dev/vda rw audit=0";
 		linux,initrd-start = <0x40001000>;
 		linux,initrd-end = <0x4010eab1>;
 	};
 
-    virtio_mmio@a000400 {
-		dma-coherent;
-		compatible = "virtio,mmio";
-		interrupts = <0x00 0x11 0x01>;
-		reg = <0x00 0xa000400 0x00 0x400>;
-	};
+    // virtio_mmio@a000400 {
+	// 	dma-coherent;
+	// 	compatible = "virtio,mmio";
+	// 	interrupts = <0x00 0x11 0x01>;
+	// 	reg = <0x00 0xa000400 0x00 0x400>;
+	// };
 
     // virtio_mmio@a000c00 {
 	// 	dma-coherent;

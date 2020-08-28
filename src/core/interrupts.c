@@ -14,10 +14,10 @@
  *
  */
 
-#include <interrupts.h>
-
 #include <bitmap.h>
 #include <cpu.h>
+#include <interrupts.h>
+#include <sched.h>
 #include <string.h>
 #include <vm.h>
 
@@ -79,17 +79,37 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
-    
-    if (int_id != 27 && int_id != 1 && int_id != 79 && int_id != 25) {
-        printf("[C%d] interrupts_handle %d \n", cpu.id, int_id);
+    if (int_id != 27 && int_id != 1 && int_id != 79 && int_id != 26) {
+        printf("[C%d] interrupts %d \n", cpu.id, int_id);
     }
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {
-        interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
+        printf("[vm%d][vm%d] interrupts_handle %d \n", cpu.vcpu->vm->id,
+               cpu.vcpu->vm->id, int_id);
+        if (interrupts_arch_int_is_enable(cpu.vcpu, int_id)) {
+            printf("[enable]\n");
+            interrupts_vm_inject(cpu.vcpu->vm, int_id, source);
+        }
         return FORWARD_TO_VM;
     } else if (interrupt_is_reserved(int_id)) {
         interrupt_handlers[int_id](int_id, source);
         return HANDLED_BY_HYP;
     } else {
+        for (int i = 0; i < vcpu_pool.num; i++) {
+            if (i == active_idx) {
+                continue;
+            }
+            vcpu_t *vcpu = vcpu_pool.vcpu_content[i].vcpu;
+            if (vm_has_interrupt(vcpu->vm, int_id)) {
+                printf("[vm%d][vm%d] interrupts_handle %d \n", cpu.vcpu->vm->id,
+                       vcpu->vm->id, int_id);
+                if (interrupts_arch_int_is_enable(vcpu, int_id)) {
+                    printf("[enable]\n");
+                    interrupts_vm_inject(vcpu->vm, int_id, source);
+                }
+                // vcpu_pool_switch(i);
+                return FORWARD_TO_VM;
+            }
+        }
         ERROR("received unknown interrupt id = %d", int_id);
     }
 }

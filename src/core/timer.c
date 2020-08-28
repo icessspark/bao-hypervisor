@@ -3,6 +3,7 @@
 #include <interrupts.h>
 #include <spinlock.h>
 #include <timer.h>
+#include <sched.h>
 
 spinlock_t timer_handler_lock = SPINLOCK_INITVAL;
 
@@ -10,9 +11,9 @@ void timer_init()
 {
     // interrupts_arch_cpu_enable(false);
     arch_timer_init(cpu.id);
-
     if (cpu.id == CPU_MASTER) {
         interrupts_reserve(NONSEC_EL2_PHY_TIMER_INT, timer_handler);
+        INFO("Timer frequency %dHz", arch_get_frq());
     }
 
     INFO("CPU%d timer_init ok", cpu.id);
@@ -24,9 +25,11 @@ void timer_handler()
 
     spin_lock(&timer_handler_lock);
 
-    uint32_t num_of_period = 100;
+    uint32_t num_of_period = 1;
     // printf("[C%d] 0x%x\n", cpu.id, arch_get_count());
     arch_timer_update(num_of_period);
+
+    vcpu_pool_switch(ANY_PENDING_VCPU);
 
     spin_unlock(&timer_handler_lock);
 

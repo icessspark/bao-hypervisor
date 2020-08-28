@@ -14,7 +14,7 @@ static void manager_add_virtio_mmio()
 {
     if (virtio_mmio_manager.devs_probed) return;
 
-#define DEV_NUN 3
+#define DEV_NUN 2
 
     virtio_mmio_t virtio_devs[DEV_NUN] = {
         {.id = 0,
@@ -24,13 +24,13 @@ static void manager_add_virtio_mmio()
          .size = VIRTIO_MMIO_SIZE,
          .int_id = 0x10 + 32,
          .type = VIRTIO_TYPE_BLOCK},
-        {.id = 1,
-         .vm_id = 1,
-         .va = VIRTIO_MMIO_ADDRESS + VIRTIO_MMIO_SIZE,
-         .pa = 2097152000,
-         .size = VIRTIO_MMIO_SIZE,
-         .int_id = 0x11 + 32,
-         .type = VIRTIO_TYPE_BLOCK},
+        // {.id = 1,
+        //  .vm_id = 1,
+        //  .va = VIRTIO_MMIO_ADDRESS + VIRTIO_MMIO_SIZE,
+        //  .pa = 2097152000,
+        //  .size = VIRTIO_MMIO_SIZE,
+        //  .int_id = 0x11 + 32,
+        //  .type = VIRTIO_TYPE_BLOCK},
         {.id = 2,
          .vm_id = 0,
          .va = VIRTIO_MMIO_ADDRESS + VIRTIO_MMIO_SIZE * 2,
@@ -40,7 +40,7 @@ static void manager_add_virtio_mmio()
          .type = VIRTIO_TYPE_BLOCK}};
 
     for (int i = 0; i < DEV_NUN; i++) {
-        virtio_mmio_manager.virt_mmio_devs[i] = virtio_devs[i];
+        virtio_mmio_manager.virt_mmio_devs[virtio_devs[i].id] = virtio_devs[i];
         virtio_mmio_manager.vm_has_dev |= (1 << virtio_devs[i].vm_id);
         virtio_mmio_manager.num++;
     }
@@ -78,9 +78,9 @@ void virtio_init(vm_t* vm)
         INFO("vm%d has virtio devs", vm->id);
     }
 
-    for (int i = 0; i < virtio_mmio_manager.num; i++) {
+    for (int i = 0; i < VIRTIO_MMIO_DEVICE_MAX; i++) {
         virtio_mmio_t* virtio_mmio = &virtio_mmio_manager.virt_mmio_devs[i];
-        if (virtio_mmio->vm_id != vm->id) continue;
+        if (virtio_mmio->vm_id != vm->id || virtio_mmio->type == 0) continue;
         // FIXME: need to be a list
         vm->virtio = virtio_mmio;
         if (!virtio_mmio_init(virtio_mmio)) {

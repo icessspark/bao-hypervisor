@@ -17,6 +17,7 @@
 #define __INTERRUPTS_H__
 
 #include <arch/interrupts.h>
+#include <arch/vgicv2.h>
 #include <bao.h>
 
 typedef struct vm vm_t;
@@ -50,5 +51,7 @@ void interrupts_arch_ipi_send(uint64_t cpu_target, uint64_t ipi_id);
 void interrupts_arch_vm_assign(vm_t *vm, uint64_t id);
 void interrupts_arch_vm_inject(vm_t *vm, uint64_t id, uint64_t source);
 bool interrupts_arch_conflict(bitmap_t interrupt_bitmap, uint64_t id);
+
+bool interrupts_arch_int_is_enable(vcpu_t *vcpu, uint64_t int_id);
 
 #endif /* __INTERRUPTS_H__ */

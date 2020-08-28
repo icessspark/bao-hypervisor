@@ -18,13 +18,16 @@
 #include <fences.h>
 #include <page_table.h>
 #include <string.h>
-#include <vm.h>
 #include <timer.h>
+#include <tlb.h>
+#include <vm.h>
 
 void vm_arch_init(vm_t* vm, const vm_config_t* config)
 {
     if (vm->master == cpu.id) {
         pt_set_recursive(&vm->as.pt, PT_VM_REC_IND);
+        ISB();
+        tlb_hyp_inv_all();
         vgic_init(vm, &config->platform.arch.gic);
     }
 }
@@ -47,18 +50,7 @@ static uint64_t vm_cpuid_to_mpidr(vm_t* vm, uint64_t cpuid)
 void vcpu_arch_init(vcpu_t* vcpu, vm_t* vm)
 {
     vcpu->arch.vmpidr = vm_cpuid_to_mpidr(vm, vcpu->id);
-    MSR(VMPIDR_EL2, vcpu->arch.vmpidr);
-
     vcpu->arch.psci_ctx.state = vcpu->id == CPU_MASTER ? ON : OFF;
-
-    uint64_t root_pt_pa;
-    mem_translate(&cpu.as, vm->as.pt.root, &root_pt_pa);
-    MSR(VTTBR_EL2, ((vm->id << VTTBR_VMID_OFF) & VTTBR_VMID_MSK) |
-                       (root_pt_pa & ~VTTBR_VMID_MSK));
-
-    ISB();  // make sure vmid is commited befor tlbi
-    tlb_vm_inv_all(vm->id);
-
     vgic_cpu_init(vcpu);
 }
 

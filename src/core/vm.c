@@ -16,6 +16,7 @@
 
 #include <cache.h>
 #include <mem.h>
+#include <sched.h>
 #include <string.h>
 #include <vm.h>
 
@@ -46,26 +47,19 @@ void vm_cpu_init(vm_t* vm)
     spin_unlock(&vm->lock);
 }
 
-void vm_vcpu_init(vm_t* vm, const vm_config_t* config)
+vcpu_t* vm_vcpu_init(vm_t* vm, const vm_config_t* config, uint64_t id)
 {
     size_t n = NUM_PAGES(sizeof(vcpu_t));
     vcpu_t* vcpu = (vcpu_t*)mem_alloc_page(n, SEC_HYP_VM, true);
     memset(vcpu, 0, n * PAGE_SIZE);
 
-    cpu.vcpu = vcpu;
+    // cpu.vcpu = vcpu;
     vcpu->phys_id = cpu.id;
     vcpu->vm = vm;
-
-    uint64_t count = 0, offset = 0;
-    while (count < vm->cpu_num) {
-        if (offset == cpu.id) {
-            vcpu->id = count;
-            break;
-        }
-        if ((1UL << offset) & vm->cpus) {
-            count++;
-        }
-        offset++;
+    if (id < config->platform.cpu_num) {
+        vcpu->id = id;
+    } else {
+        ERROR("vcpu id beyond platform description!");
     }
 
     memset(vcpu->stack, 0, sizeof(vcpu->stack));
@@ -76,6 +70,8 @@ void vm_vcpu_init(vm_t* vm, const vm_config_t* config)
     vcpu_arch_reset(vcpu, config->entry);
 
     list_push(&vm->vcpu_list, &vcpu->node);
+
+    return vcpu;
 }
 
 static void vm_copy_img_to_rgn(vm_t* vm, const vm_config_t* config,
@@ -249,7 +245,8 @@ static void vm_init_dev(vm_t* vm, const vm_config_t* config)
     // vm_add_emul_console(vm);
 }
 
-void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
+void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id,
+             uint64_t vcpu_id, pte_t pte)
 {
     /**
      * Before anything else, initialize vm structure.
@@ -263,7 +260,7 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
      */
     vm_cpu_init(vm);
 
-    cpu_sync_barrier(&vm->sync);
+    // cpu_sync_barrier(&vm->sync);
 
     /**
      * Perform architecture dependent initializations. This includes,
@@ -275,7 +272,12 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
     /*
      *  Initialize each virtual core.
      */
-    vm_vcpu_init(vm, config);
+    vcpu_t* vcpu = vm_vcpu_init((void*)(BAO_VM_BASE + 0x100000 * vm_id),
+                                &vm_config_ptr->vmlist[vm_id], vcpu_id);
+
+    if (!vcpu_pool_append(vcpu, pte)) {
+        ERROR("Num of vcpus over the limit!");
+    }
 
     /**
      * Create the VM's address space according to configuration and where
@@ -286,9 +288,13 @@ void vm_init(vm_t* vm, const vm_config_t* config, bool master, uint64_t vm_id)
         vm_init_dev(vm, config);
     }
 
-    vm_virtio_init(vm, master);
+    /**
+     * Initialize virtio_mmio
+     */
 
-    cpu_sync_barrier(&vm->sync);
+    // vm_virtio_init(vm, master);
+
+    // cpu_sync_barrier(&vm->sync);
 }
 
 vcpu_t* vm_get_vcpu(vm_t* vm, uint64_t vcpuid)

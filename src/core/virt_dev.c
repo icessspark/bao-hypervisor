@@ -347,8 +347,8 @@ bool virtio_be_blk_handler(emul_access_t* acc)
                offset <= VIRTIO_MMIO_REGS_END) {
         virtio_be_cfg_handler(virtio_mmio, acc, offset, write);
     } else {
-        ERROR("virtio_mmio regs wrong %s, address 0x%x",
-              write == 1 ? "write" : "read", acc->addr);
+        ERROR("virtio_mmio regs wrong %s, address 0x%x, offset 0x%x",
+              write == 1 ? "write" : "read", acc->addr, offset);
     }
 
     spin_unlock(&req_handler_lock);

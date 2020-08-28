@@ -15,7 +15,9 @@
 
 #include <arch/sysregs.h>
 #include <cpu.h>
+#include <fences.h>
 #include <mem.h>
+#include <tlb.h>
 
 void as_arch_init(addr_space_t* as)
 {
@@ -31,7 +33,10 @@ void as_arch_init(addr_space_t* as)
     } else {
         index = PT_CPU_REC_IND;
     }
+
     pt_set_recursive(&as->pt, index);
+    ISB();
+    tlb_hyp_inv_all();
 }
 
 bool mem_translate(addr_space_t* as, void* va, uint64_t* pa)

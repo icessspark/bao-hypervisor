@@ -27,7 +27,7 @@
 
 enum AS_TYPE { AS_HYP = 0, AS_VM, AS_HYP_CPY };
 enum AS_SEC {
-    /*--- VM AS SECTIONS -----*/
+    /*--- HYP AS SECTIONS -----*/
     SEC_HYP_GLOBAL = 0,
     SEC_HYP_IMAGE,
     SEC_HYP_DEVICE,

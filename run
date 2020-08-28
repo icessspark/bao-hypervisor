@@ -6,7 +6,7 @@ popd
 make
 qemu-system-aarch64 -cpu cortex-a53 \
 -machine virt,virtualization=on,gic-version=2 \
--smp 4 \
+-smp 1 \
 -kernel bin/qemu/aarch64-virt/bao.bin \
 -m 4g \
 -device loader,file=configs/virtlinux/virtlinux.bin,addr=0x49000000 \

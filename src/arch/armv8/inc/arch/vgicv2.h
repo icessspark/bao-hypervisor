@@ -61,5 +61,6 @@ void vgic_init(vm_t *vm, const struct gic_dscrp *gic_dscrp);
 void vgic_cpu_init(vcpu_t *vcpu);
 void vgic_set_hw(vm_t *vm, uint64_t id);
 void vgicd_inject(vgicd_t *vgicd, uint64_t id, uint64_t source);
+bool vgic_int_is_enable(vcpu_t *vcpu, uint64_t int_id);
 
 #endif /* __VGICV2_H__ */

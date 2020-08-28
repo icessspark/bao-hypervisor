@@ -58,6 +58,12 @@ static inline vgic_int_t *vgic_get_int(vcpu_t *vcpu, uint64_t int_id)
     }
 }
 
+bool vgic_int_is_enable(vcpu_t *vcpu, uint64_t int_id)
+{
+    vgic_int_t *interrupt = vgic_get_int(vcpu, int_id);
+    return interrupt->enabled;
+}
+
 bool vgic_owns(vcpu_t *vcpu, vgic_int_t *interrupt)
 {
     return interrupt->owner == vcpu || gic_is_priv(interrupt->id);
@@ -398,6 +404,8 @@ void vgic_route(vcpu_t *vcpu, vgic_int_t *interrupt)
 
 void vgicd_set_enable(vcpu_t *vcpu, uint64_t int_id, bool en)
 {
+    // if (en) printf("[vm%d] int_id %d\n", cpu.vcpu->vm->id, int_id);
+
     if (int_id < GIC_MAX_SGIS) return;
 
     vgic_int_t *interrupt = vgic_get_int(cpu.vcpu, int_id);
@@ -1170,7 +1178,6 @@ void vgic_cpu_init(vcpu_t *vcpu)
         vcpu->arch.vgicd_priv.interrupts[i].state = INV;
         vcpu->arch.vgicd_priv.interrupts[i].prio = 0xFF;
         vcpu->arch.vgicd_priv.interrupts[i].targets = (1U << vcpu->phys_id);
-        ;
         vcpu->arch.vgicd_priv.interrupts[i].lock = 0;
         vcpu->arch.vgicd_priv.interrupts[i].in_lr = 0;
         vcpu->arch.vgicd_priv.interrupts[i].lr = 0;
