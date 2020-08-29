@@ -2,12 +2,13 @@
 #define __VIRT_Q_H__
 
 #include <bao.h>
+#include <fences.h>
 #include <list.h>
 #include <objcache.h>
 #include <util.h>
+#include <virt_blk.h>
 #include <virt_dev.h>
 #include <virtio_mmio.h>
-#include <arch/fences.h>
 
 typedef struct virtio_mmio virtio_mmio_t;
 
@@ -65,8 +66,18 @@ typedef struct virtq virtq_t;
 // }
 
 void virtq_init(virtq_t *vq);
-bool process_guest_blk_notify(virtq_t *, virtio_mmio_t *);
-
-
+uint16_t get_avail_desc(virtq_t *vq, uint64_t avail_addr, uint32_t num);
+uint16_t get_virt_desc_header(virtq_t *vq, struct virtio_blk_req *req,
+                              uint16_t desc_idx, struct vring_desc *desc_table);
+uint16_t get_virt_desc_data(virtq_t *vq, struct virtio_blk_req *req,
+                            uint16_t desc_idx, struct vring_desc *desc_table);
+uint16_t update_virt_desc_status(virtq_t *vq, struct virtio_blk_req *req,
+                                 uint16_t desc_idx,
+                                 struct vring_desc *desc_table,
+                                 uint16_t status);
+void update_used_ring(virtq_t *vq, struct virtio_blk_req *req,
+                      uint64_t used_addr, uint16_t desc_chain_head_idx,
+                      uint32_t num);
+void virtq_notify(virtq_t *vq, int count, uint32_t int_id);
 
 #endif /* __VIRT_DEV_H__ */

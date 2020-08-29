@@ -79,8 +79,8 @@ inline void interrupts_vm_inject(vm_t *vm, uint64_t id, uint64_t source)
 
 enum irq_res interrupts_handle(uint64_t int_id, uint64_t source)
 {
-    
-    if (int_id != 27 && int_id != 1 && int_id != 79 && int_id != 25) {
+    if (int_id != 27 && int_id != 1 && int_id != 79 && int_id != 25 &&
+        int_id != 26) {
         printf("[C%d] interrupts_handle %d \n", cpu.id, int_id);
     }
     if (vm_has_interrupt(cpu.vcpu->vm, int_id)) {

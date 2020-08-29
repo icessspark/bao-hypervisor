@@ -47,6 +47,8 @@ add_executable(bao
         src/core/inc/virtio_mmio.h
         src/core/inc/virtq.h
         src/core/inc/virt_dev.h
+        src/core/inc/virt_blk.h
+        src/core/inc/virt_net.h
         src/arch/armv8/inc/arch/vgicv2.h
         src/arch/armv8/inc/arch/vm.h
         src/arch/armv8/interrupts.c
@@ -88,6 +90,8 @@ add_executable(bao
         src/core/virtio_mmio.c
         src/core/virt_dev.c
         src/core/virtq.c
+        src/core/virt_blk.c
+        src/core/virt_net.c
         src/core/vm.c
         src/core/vmm.c
         src/lib/bit.c
